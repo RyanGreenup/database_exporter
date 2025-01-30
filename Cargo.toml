@@ -4,5 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+polars-core = "0.45.1"
 connectorx = { version = "0.4.1", features = ["arrow", "dst_arrow", "dst_polars", "polars", "src_mssql"] }
-polars = "0.46.0"
+polars = { version = "0.45.1", features = ["parquet"] }
+# polars-core MUST match between both in order to pass the dataframe to the polars parquet writer,
+# inspect the tree with:
+# cargo tree | grep polars-core
+# And identify the lowest common denominator

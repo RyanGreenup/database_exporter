@@ -1,5 +1,5 @@
 use connectorx::prelude::*;
-use polars::prelude;
+use polars::prelude::{self, ParquetWriter};
 use std::convert::TryFrom;
 
 fn get_query_all_tables() -> String {
@@ -29,22 +29,23 @@ fn main() {
     // let queries = &[CXQuery::from("SELECT * FROM Track")];
     let queries = &[CXQuery::from(get_query_all_tables().as_str())];
 
-    // Make an arrow
-    // let destination = get_arrow(&source_conn, None, queries).expect("run failed");
-    // let mut destination = ArrowDestination::new();
-    // let dispatcher = Dispatcher::<SQLiteSource, ArrowDestination, SQLiteArrowTransport>::new(source_conn, &mut destination, queries, None);
-    // dispatcher.run().expect("run failed");
-
-    // let data = destination.arrow();
-
     // This is the data
     let destination = get_arrow(&source_conn, None, queries).expect("Run Failed");
     // let data = destination.arrow();
     // TODO Make this a function so we can loop with a log
-    let data = destination.polars().expect("Unable to get Dataframe");
+    let mut data = destination.polars().expect("Unable to get Dataframe");
 
     // print it I guess
     println!("{:#?}", data);
 
+    let path = "./table_list.parquet";
+    let mut file =
+        std::fs::File::create(path).expect("Unable to create parquet file");
+    ParquetWriter::new(&mut file)
+        .finish(&mut data)
+        .expect("Unable to write parquet file");
+
+    println!("Export Successful!");
+    println!("See Output at {path}");
     // From here read with duckdb or polars
 }
