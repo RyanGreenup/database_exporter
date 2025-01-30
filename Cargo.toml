@@ -1,0 +1,8 @@
+[package]
+name = "extract_to_sqlite_rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+connectorx = { version = "0.4.1", features = ["arrow", "dst_arrow", "dst_polars", "polars", "src_mssql"] }
+polars = "0.46.0"
