@@ -1,6 +1,8 @@
 use connectorx::prelude::*;
 use polars::prelude::{self, ParquetWriter};
 use std::convert::TryFrom;
+mod cli;
+use cli::Cli;
 
 fn get_query_all_tables() -> String {
     return r#"
@@ -12,6 +14,9 @@ fn get_query_all_tables() -> String {
 }
 
 fn main() {
+    let cli = Cli::parse();
+    let config_path = cli.get_config_path();
+    println!("Using config file at: {}", config_path.display());
     run()
 }
 
