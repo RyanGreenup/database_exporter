@@ -22,7 +22,8 @@ pub struct SQLServer {
     source_conn: SourceConn,
 }
 
-// TODO this should become a trait
+// Create a trait that represents these methods and implement that trait for the SQLServer struct
+// AI!
 impl SQLServer {
     pub fn new(config: SqlServerConfig) -> SQLServer {
         // Define the database credentials
