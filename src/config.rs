@@ -22,9 +22,13 @@ pub struct SQLServer {
     source_conn: SourceConn,
 }
 
-// Create a trait that represents these methods and implement that trait for the SQLServer struct
-// AI!
-impl SQLServer {
+pub trait DatabaseOperations {
+    fn new(config: SqlServerConfig) -> Self where Self: Sized;
+    fn print_tables(&self);
+    fn get_optional_tables(&self) -> Vec<Option<String>>;
+}
+
+impl DatabaseOperations for SQLServer {
     pub fn new(config: SqlServerConfig) -> SQLServer {
         // Define the database credentials
         let mut uri = format!(
