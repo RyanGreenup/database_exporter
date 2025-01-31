@@ -1,9 +1,11 @@
 use connectorx::prelude::*;
 mod cli;
 mod config;
+mod sql_server;
 use clap::Parser;
 use cli::Cli;
-use config::{Config, SQLServer};
+use config::{Config, SQLEngineConfig};
+use sql_server::{DatabaseOperations, SQLServer};
 use std::process;
 
 fn main() {
@@ -19,7 +21,17 @@ fn main() {
     }
 }
 
-fn run(sql_config: config::SqlServerConfig) {
+fn run(sql_config: config::SQLEngineConfig) {
     let ms_db = SQLServer::new(sql_config);
-    ms_db.print_tables()
+
+    // Print all the tables
+    // ms_db.print_tables()
+
+    // print all dataframes
+    // ms_db.print_dataframes();
+
+    // Export all dataframes (1 row)
+    ms_db.export_dataframes(1);
+
+
 }
