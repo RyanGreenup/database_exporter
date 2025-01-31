@@ -31,7 +31,8 @@ fn run(sql_config: config::SQLEngineConfig) {
     // ms_db.print_dataframes();
 
     // Export all dataframes (1 row)
-    ms_db.export_dataframes(1);
+    // TODO this should be a toml parameter or a CLI Parameter
+    ms_db.export_dataframes(5);
 
 
 }

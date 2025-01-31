@@ -145,8 +145,9 @@ impl SQLServer {
         let mut df = self.get_dataframe(table, head);
 
         // Make a directory called ./parquets/
-        let dirname = PathBuf::from("data/extracted/parquets");
-        let dir = std::fs::create_dir(&dirname).unwrap_or_else(|e| {
+        // TODO this should be a toml parameter or a CLI Parameter
+        let dirname = PathBuf::from("./data/extracted/parquets");
+        let dir = std::fs::create_dir_all(&dirname).unwrap_or_else(|e| {
             panic!("Unable to create directory: {:?}\n{e}", dirname);
         });
 
@@ -184,4 +185,7 @@ impl SQLServer {
             }
         }
     }
+
+
+    // TODO Export to DuckDB
 }
