@@ -12,6 +12,10 @@ fn get_query_all_tables() -> String {
 }
 
 fn main() {
+    run()
+}
+
+fn run() {
     // Define the database credentials
     // TODO make a class for the credentials for docstrings
     let username = "sa";
@@ -39,8 +43,7 @@ fn main() {
     println!("{:#?}", data);
 
     let path = "./table_list.parquet";
-    let mut file =
-        std::fs::File::create(path).expect("Unable to create parquet file");
+    let mut file = std::fs::File::create(path).expect("Unable to create parquet file");
     ParquetWriter::new(&mut file)
         .finish(&mut data)
         .expect("Unable to write parquet file");
