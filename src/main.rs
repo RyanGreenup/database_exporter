@@ -2,8 +2,11 @@ use connectorx::prelude::*;
 use polars::prelude::ParquetWriter;
 use std::convert::TryFrom;
 mod cli;
+mod config;
 use cli::Cli;
 use clap::Parser;
+use config::Config;
+use std::process;
 
 fn get_query_all_tables() -> String {
     return r#"
@@ -18,16 +21,29 @@ fn main() {
     let cli = Cli::parse();
     let config_path = cli.get_config_path();
     println!("Using config file at: {}", config_path.display());
-    run()
+
+    match Config::load(&config_path) {
+        Ok(config) => {
+            println!("Config loaded successfully");
+            run(&config.sql_server)
+        }
+        Err(e) => {
+            eprintln!("{}", e);
+            process::exit(1);
+        }
+    }
 }
 
-fn run() {
+fn run(sql_config: &config::SqlServerConfig) {
     // Define the database credentials
-    // TODO make a class for the credentials for docstrings
-    let username = "sa";
-    let password = "238923klsdklsdklDSDSDS@!!@";
-    let database = "chinook";
-    let mut uri = format!("mssql://{username}:{password}@localhost:1433/{database}");
+    let mut uri = format!(
+        "mssql://{}:{}@{}:{}/{}",
+        sql_config.username,
+        sql_config.password,
+        sql_config.host,
+        sql_config.port,
+        sql_config.database
+    );
     uri = format!("{uri}?encrypt=false");
     uri = format!("{uri}&trusted_connection=false");
     uri = format!("{uri}&trust_server_certificate=true");
