@@ -1,8 +1,9 @@
 use connectorx::prelude::*;
-use polars::prelude::{self, ParquetWriter};
+use polars::prelude::ParquetWriter;
 use std::convert::TryFrom;
 mod cli;
 use cli::Cli;
+use clap::Parser;
 
 fn get_query_all_tables() -> String {
     return r#"
