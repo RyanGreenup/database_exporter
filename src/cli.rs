@@ -17,8 +17,9 @@ impl Cli {
         }
 
         // Fall back to XDG config location
-        if let Some(proj_dirs) = ProjectDirs::from("com", "yourorg", "chinook-exporter") {
+        if let Some(proj_dirs) = ProjectDirs::from("", "", "database_exporter") {
             let config_dir = proj_dirs.config_dir();
+            println!("{:#?}", config_dir);
             std::fs::create_dir_all(config_dir).expect("Failed to create config directory");
             return config_dir.join("config.toml");
         }

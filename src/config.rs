@@ -32,18 +32,18 @@ impl Config {
         if !path.exists() {
             let default_config = Config {
                 sql_server: SqlServerConfig {
-                    username: "xxxxxxxxxxxxxxxx".to_string(),
-                    password: "xxxxxxxxxxxxxxx".to_string(),
-                    database: "xxxxxxxxxxxxxx".to_string(),
-                    host: "xxxxxxxxxxxxxxxxxxxx".to_string(),
-                    port: "xxxxxxxxxxxxxxxxxx".to_string(),
+                    username: "".to_string(),
+                    password: "".to_string(),
+                    database: "".to_string(),
+                    host: "".to_string(),
+                    port: "".to_string(),
                 },
                 postgres: PostgresConfig {
-                    username: "xxxxxxxxxxxxxxxxxx".to_string(),
-                    password: "xxxxxxxxxxxxxxx".to_string(),
-                    database: "xxxxxxxxxxxxxxx".to_string(),
-                    host: "xxxxxxxxxxxxx".to_string(),
-                    port: "xxxxxxxxxxxxxxxxxx".to_string(),
+                    username: "".to_string(),
+                    password: "".to_string(),
+                    database: "".to_string(),
+                    host: "".to_string(),
+                    port: "".to_string(),
                 },
             };
 
