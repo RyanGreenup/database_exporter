@@ -1,6 +1,4 @@
 use connectorx::prelude::*;
-use polars::prelude::ParquetWriter;
-use std::convert::TryFrom;
 mod cli;
 mod config;
 use clap::Parser;

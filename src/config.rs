@@ -111,7 +111,7 @@ impl SQLServer {
             })
             .collect();
 
-        return vec_of_table_names;
+        vec_of_table_names
     }
 }
 
