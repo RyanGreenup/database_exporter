@@ -11,7 +11,9 @@ clap = { version = "4.5.27", features = ["derive"] }
 toml = "0.8.19"
 directories = "6.0.0"
 serde = { version = "1.0.217", features = ["derive", "serde_derive"] }
-duckdb = { version = "1.1.1", features = ["parquet", "polars"] }
+
+# The version of polars in duckdb is too old (0.35) so we can't use it.
+duckdb = { version = "1.1.1", features = ["parquet"] }
 # polars-core MUST match between both in order to pass the dataframe to the polars parquet writer,
 # inspect the tree with:
 # cargo tree | grep polars-core
