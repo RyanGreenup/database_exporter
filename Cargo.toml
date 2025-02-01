@@ -19,3 +19,7 @@ duckdb = { version = "1.1.1", features = ["parquet"] }
 # inspect the tree with:
 # cargo tree | grep polars-core
 # And identify the lowest common denominator
+
+# This may cause grief but should be faster
+[build]
+rustflags = ["-Z", "threads=8"]
