@@ -31,8 +31,29 @@ pub trait DatabaseOperations {
     fn get_optional_tables(&self) -> Vec<Option<String>>;
     fn get_query_all_tables() -> GetTablesQuery;
     fn print_tables(&self);
+    fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination;
     fn make_duckdb_connection() -> Connection {
         Connection::open(PathBuf::from("./data.duckdb")).expect("Unable to create duckdb file")
+    }
+
+    fn print_all_tables_as_dataframes(&self, limit: Option<u32>) {
+        for maybe_table in self.get_optional_tables() {
+            if let Some(table) = maybe_table {
+                let df = self.get_dataframe(&table, limit);
+                println!("{:#?}", df);
+            }
+        }
+    }
+
+    fn get_dataframe(&self, table: &str, limit: Option<u32>) -> DataFrame {
+        // Get the arrow Destination
+        let destination = self.get_arrow_destination(table, limit);
+
+        // Get a Dataframe (NOTE must have same polars_core version in connectorx
+        // and polars, look at `cargo tree | grep polars-core`)
+        let df = destination.polars().expect("Unable to get Dataframe");
+
+        return df;
     }
 }
 
@@ -132,6 +153,20 @@ impl DatabaseOperations for SQLServer {
 
         vec_of_table_names
     }
+
+    fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination {
+        // Build the query
+        let query = match limit {
+            Some(n) => format!("SELECT TOP {} * FROM {}", n, table),
+            None => format!("SELECT * FROM {}", table),
+        };
+
+        // Get the query for the table
+        let queries = &[CXQuery::from(&query)];
+
+        // Get a Destination using Arrow
+        get_arrow(&self.source_conn, None, queries).expect("Run Failed")
+    }
 }
 
 /// Represents a parquet file associated with a specific database table.
@@ -161,30 +196,19 @@ impl TableParquet {
     }
 }
 
+pub trait ExportOperations {
+    fn write_to_parquet(&self, table: &str, limit: Option<u32>);
+    fn write_parquet_file_to_duckdb_table(&self, parquet_path: &TableParquet, schema: Option<&str>);
+}
 
 impl SQLServer {
-    // AI: get_dataframe is defined here
-    pub fn get_dataframe(&self, table: &str, head: u32) -> DataFrame {
-        // Get the query for the table
-        let query = format!("SELECT TOP {} * FROM {}", head, table);
-        let queries = &[CXQuery::from(&query)];
-
-        // Get a Destination using Arrow
-        let destination = get_arrow(&self.source_conn, None, queries).expect("Run Failed");
-
-        // Get a Dataframe (NOTE must have same polars_core version in connectorx
-        // and polars, look at `cargo tree | grep polars-core`)
-        let df = destination.polars().expect("Unable to get Dataframe");
-
-        return df;
-    }
-
     // TODO this should not panic so it can be looped
     // Consider returning the path or taking the TableParquet as input
-    pub fn write_to_parquet(&self, table: &str, head: u32) {
+    pub fn write_to_parquet(&self, table: &str, limit: Option<u32>) {
         // Get the dataframe
-        let mut df = self.get_dataframe(table, head);
+        let mut df = self.get_dataframe(table, limit);
 
+        // Create the parquet path
         let parquet_path = TableParquet::new(table);
         let filename = parquet_path.file_path;
 
@@ -202,19 +226,10 @@ impl SQLServer {
         println!("Export Successful for: {:?}!", &filename);
     }
 
-    pub fn print_dataframes(&self) {
+    pub fn export_dataframes(&self, limit: Option<u32>) {
         for maybe_table in self.get_optional_tables() {
             if let Some(table) = maybe_table {
-                let df = self.get_dataframe(&table, 2);
-                println!("{:#?}", df);
-            }
-        }
-    }
-
-    pub fn export_dataframes(&self, head: u32) {
-        for maybe_table in self.get_optional_tables() {
-            if let Some(table) = maybe_table {
-                self.write_to_parquet(&table, head);
+                self.write_to_parquet(&table, limit);
                 // TODO set the schema based on the database name
                 // Use a variable in the config, e.g. database_name
                 let tp = TableParquet::new(&table);
@@ -222,6 +237,10 @@ impl SQLServer {
             }
         }
     }
+
+    // TODO I would like to make this a default trait method
+    // But I can't because it requires the duckdb_conn
+    // Figure this out, maybe make it more general?
 
     // TODO Export to DuckDB
     // Here we just load the parquets
@@ -238,14 +257,14 @@ impl SQLServer {
         let schema = schema.unwrap_or("main");
 
         // Change into the directory
-        let path_string = match parquet_path.file_path.to_str() {
+        match parquet_path.file_path.to_str() {
             Some(path_str) => {
                 // Read the parquet as a file
                 self.duckdb_conn
                     .execute(
                         // https://duckdb.org/docs/data/parquet/overview.html
                         &format!(
-                            "CREATE OR REPLACE TABLE {} AS SELECT * FROM '{}';",
+                            "CREATE OR REPLACE TABLE {schema}.{} AS SELECT * FROM '{}';",
                             &parquet_path.table_name,
                             &path_str.to_string()
                         ),
