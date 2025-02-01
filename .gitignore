@@ -3,3 +3,4 @@ target
 .aider.input.history
 .aider.tags.cache.v3
 data
+data.duckdb

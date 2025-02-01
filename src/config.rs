@@ -20,7 +20,6 @@ pub struct SQLEngineConfig {
     pub database: String,
     pub host: String,
     pub port: String,
-    pub duckdb_conn: Connection
 }
 
 
