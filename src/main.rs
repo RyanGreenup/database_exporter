@@ -2,6 +2,7 @@ use connectorx::prelude::*;
 mod cli;
 mod config;
 mod sql_server;
+mod postgres;
 use clap::Parser;
 use cli::Cli;
 use config::{Config, SQLEngineConfig};

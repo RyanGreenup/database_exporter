@@ -5,6 +5,7 @@ use polars::prelude::ParquetWriter;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+use duckdb::{params, Connection, Result};
 
 pub struct GetTablesQuery {
     /// The query that will return all tables for the given database
@@ -19,6 +20,7 @@ pub struct SQLServer {
     pub config: SQLEngineConfig,
     pub uri_string: String,
     source_conn: SourceConn,
+    duckdb_conn: Connection
 }
 
 pub trait DatabaseOperations {
@@ -28,6 +30,10 @@ pub trait DatabaseOperations {
     fn get_optional_tables(&self) -> Vec<Option<String>>;
     fn get_query_all_tables() -> GetTablesQuery;
     fn print_tables(&self);
+    fn make_duckdb_connection() -> Connection {
+        Connection::open(PathBuf::from("./data.duckdb"))
+    }
+
 }
 
 impl DatabaseOperations for SQLServer {
@@ -43,10 +49,14 @@ impl DatabaseOperations for SQLServer {
         uri = format!("{uri}&trusted_connection=false");
         uri = format!("{uri}&trust_server_certificate=true");
         let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
+        // TODO this should take from the toml or the CLI
+        // TODO this must respect the extracted path (which should be configurable in the toml
+        // TODO this should use an immutable private attribute for the db location
         Self {
             config,
             uri_string: uri,
             source_conn,
+            duckdb_conn: make_duckdb_connection(),
         }
     }
 
@@ -189,52 +199,7 @@ impl SQLServer {
     }
 
     // TODO Export to DuckDB
-}
-
-#[derive(Debug)]
-#[allow(dead_code)]
-pub struct Postgres {
-    pub config: SQLEngineConfig,
-    pub uri_string: String,
-    source_conn: SourceConn,
-}
-
-impl Postgres {
-    /// The URI string used by connectorx
-    /// See the documentation at <https://sfu-db.github.io/connector-x/databases/postgres.html>
-    fn new(config: SQLEngineConfig) -> Self {
-        // Define the database credentials
-        let mut uri = format!(
-            "postgres://{}:{}@{}:{}/{}",
-            config.username, config.password, config.host, config.port, config.database
-        );
-        let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
-        Self {
-            config,
-            uri_string: uri,
-            source_conn,
-        }
-    }
-
-    /// A Query to get all tables
-    fn get_query_all_tables() -> GetTablesQuery {
-        let column_name = "table_name".into();
-        let query = format!(
-            // \dt
-            r#"
-        SELECT {}
-        FROM information_schema.tables
-        WHERE table_schema = 'public'
-        AND table_type = 'BASE TABLE';
-        "#,
-            column_name
-        );
-
-        GetTablesQuery { query, column_name }
-    }
-
-    // TODO how to implement other methods and remain dry?
-
 
 
 }
+

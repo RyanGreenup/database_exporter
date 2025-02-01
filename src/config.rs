@@ -1,4 +1,5 @@
 use connectorx::prelude::*;
+use duckdb::Connection;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -19,6 +20,7 @@ pub struct SQLEngineConfig {
     pub database: String,
     pub host: String,
     pub port: String,
+    pub duckdb_conn: Connection
 }
 
 
