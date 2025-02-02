@@ -12,7 +12,14 @@ use polars::prelude::ParquetWriter;
 use std::path::Path;
 use types::DatabaseType;
 
-// Add a Docstring AI!
+/// Represents errors that can occur during database operations.
+///
+/// This enum encapsulates various error types that might occur when:
+/// - Working with Arrow data structures
+/// - Processing DataFrames
+/// - Handling Polars operations
+/// - Performing I/O operations
+/// - Interacting with DuckDB
 #[derive(Debug)]
 pub enum DatabaseError {
     ArrowError(ConnectorXOutError),
