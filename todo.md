@@ -4,7 +4,9 @@
     - [ ] Include duckdb
         - [ ] We'll need a struct for the db export info
 - [ ] Docstrings
-- [ ] Schema for database key
+- [ ] Configure Schema in database output
+    - [X] Add to function
+    - [ ] Allow swapping for `__` at cli
 - [ ] Docs
 - [X] Run should act on all keys
     - [X] don't panic

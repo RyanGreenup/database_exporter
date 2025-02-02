@@ -30,6 +30,11 @@ pub struct Cli {
     /// Limit the number of rows exported per table
     #[arg(long)]
     pub row_limit: Option<u32>,
+
+
+    /// Run as a service, periodically fetching data (seconds)
+    #[arg(long)]
+    pub delay: Option<u32>
 }
 
 

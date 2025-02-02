@@ -9,7 +9,7 @@ use connectorx::prelude::*;
 use polars::error::PolarsError;
 use polars::frame::DataFrame;
 use polars::prelude::ParquetWriter;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use types::DatabaseType;
 
 #[derive(Debug)]

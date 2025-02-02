@@ -14,6 +14,7 @@ impl std::fmt::Display for DuckDBError {
         match self {
             DuckDBError::ConnectionError(e) => write!(f, "Failed to connect to DuckDB: {}", e),
             DuckDBError::ExecutionError(e) => write!(f, "Failed to execute DuckDB query: {}", e),
+            #[allow(dead_code)]
             DuckDBError::InvalidPathError(p) => write!(f, "Invalid path provided: {}", p),
         }
     }
@@ -210,6 +211,7 @@ pub fn sanitize_schema(schema: &str) -> String {
 /// let db_path = Path::new("./my_database.db");
 /// remove_database(&db_path)?; // Removes if exists, does nothing if not found
 /// ```
+#[allow(dead_code)]
 pub fn remove_database(file_location: &Path) -> Result<(), DuckDBError> {
     // Remove the database if it exists
     match std::fs::remove_file(file_location) {
