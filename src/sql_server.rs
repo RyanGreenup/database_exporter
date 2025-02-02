@@ -110,7 +110,7 @@ trait InternalDatabaseOperations {
     /// # Returns
     ///
     /// A `GetTablesQuery` struct containing the SQL query and the column name for table names.
-    fn get_query_all_tables() -> GetTablesQuery;
+    fn get_query_all_tables(&self) -> GetTablesQuery;
 
     /// Returns the query to retrieve data from a specific table with an optional row limit.
     ///
@@ -122,7 +122,7 @@ trait InternalDatabaseOperations {
     /// # Returns
     ///
     /// A SQL query string for retrieving data from the specified table with an optional row limit.
-    fn get_table_query(table: &str, limit: Option<u32>) -> String;
+    fn get_table_query(&self, table: &str, limit: Option<u32>) -> String;
 
     /// Retrieves an ArrowDestination for a given table with an optional row limit.
     /// The ArrowDestination is an in-memory representation
@@ -210,11 +210,12 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     /// # Arguments
     ///
     /// * `config` - The configuration for the SQL engine.
+    /// * `db_type` - The type of database to connect to.
     ///
     /// # Returns
     ///
     /// A new instance of SQLServer.
-    fn new(config: SQLEngineConfig) -> Self
+    fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Self
     where
         Self: Sized;
 
