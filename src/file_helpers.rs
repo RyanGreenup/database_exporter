@@ -41,10 +41,10 @@ pub fn write_parquet_files_to_duckdb_table(
     let schema = &sanitize_schema(schema);
 
     // Open a connection
-    let duckdb_conn = Connection::open(PathBuf::from(file_location))
-        .map_err(DuckDBError::ConnectionError)?;
+    let duckdb_conn =
+        Connection::open(PathBuf::from(file_location)).map_err(DuckDBError::ConnectionError)?;
 
-    let schema = create_schema(schema, &duckdb_conn);
+    create_schema(schema, &duckdb_conn);
 
     for parquet_path in parquet_paths {
         // Change into the directory
@@ -79,9 +79,12 @@ pub fn write_parquet_files_to_duckdb_table(
             ),
         };
     }
+
+    Ok(())
 }
 
 pub fn create_schema(schema: &str, conn: &Connection) {
+    // Get a variable that contains whether or not the table exists AI!
     conn.execute(
         &format!(
             r#"
