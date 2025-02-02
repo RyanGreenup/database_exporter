@@ -33,6 +33,9 @@ fn run(configs: HashMap<String, SQLEngineConfig>) {
 
         // Export all dataframes
         // TODO this should be a toml parameter or a CLI Parameter
-        db.export_dataframes(None);
+        match db.export_dataframes(None) {
+            Ok(_) => {}
+            Err(e) => eprintln!("{e}"),
+        }
     }
 }

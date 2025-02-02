@@ -898,6 +898,7 @@ dependencies = [
  "bb8-tiberius",
  "chrono",
  "csv",
+ "fallible-streaming-iterator",
  "fehler",
  "futures",
  "hex",
@@ -914,7 +915,9 @@ dependencies = [
  "postgres-openssl",
  "r2d2",
  "r2d2_postgres",
+ "r2d2_sqlite",
  "rayon",
+ "rusqlite",
  "rust_decimal",
  "rust_decimal_macros",
  "serde_json",
@@ -1137,7 +1140,7 @@ dependencies = [
  "cast",
  "fallible-iterator 0.3.0",
  "fallible-streaming-iterator",
- "hashlink",
+ "hashlink 0.9.1",
  "libduckdb-sys",
  "memchr",
  "num-integer",
@@ -1615,6 +1618,15 @@ dependencies = [
 
 [[package]]
 name = "hashlink"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8094feaf31ff591f651a2664fb9cfd92bba7a60ce3197265e9482ebe753c8f7"
+dependencies = [
+ "hashbrown 0.14.5",
+]
+
+[[package]]
+name = "hashlink"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ba4ff7128dee98c7dc9794b6a411377e1404dba1c97deb8d1a55297bd25d8af"
@@ -2045,6 +2057,17 @@ dependencies = [
  "bitflags 2.8.0",
  "libc",
  "redox_syscall 0.5.8",
+]
+
+[[package]]
+name = "libsqlite3-sys"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf4e226dcd58b4be396f7bd3c20da8fdee2911400705297ba7d2d7cc2c30f716"
+dependencies = [
+ "cc",
+ "pkg-config",
+ "vcpkg",
 ]
 
 [[package]]
@@ -3167,6 +3190,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "r2d2_sqlite"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4dc290b669d30e20751e813517bbe13662d020419c5c8818ff10b6e8bb7777f6"
+dependencies = [
+ "r2d2",
+ "rusqlite",
+ "uuid 1.12.1",
+]
+
+[[package]]
 name = "radium"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3396,6 +3430,21 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "rusqlite"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a78046161564f5e7cd9008aff3b2990b3850dc8e0349119b98e8f251e099f24d"
+dependencies = [
+ "bitflags 2.8.0",
+ "chrono",
+ "fallible-iterator 0.3.0",
+ "fallible-streaming-iterator",
+ "hashlink 0.8.4",
+ "libsqlite3-sys",
+ "smallvec",
 ]
 
 [[package]]
@@ -4258,6 +4307,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b3758f5e68192bb96cc8f9b7e2c2cfdabb435499a28499a42f8f984092adad4b"
 dependencies = [
  "getrandom 0.2.15",
+ "rand 0.8.5",
 ]
 
 [[package]]

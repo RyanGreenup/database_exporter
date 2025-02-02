@@ -10,7 +10,7 @@ pub struct SQLEngineConfig {
     pub username: String,
     pub password: String,
     #[serde(default)]
-    pub file_path: String, // Only used for sqlite
+    pub database: String, // Filepath for sqlite
     pub host: String,
     pub port: String,
 }
@@ -19,15 +19,44 @@ impl SQLEngineConfig {
     pub fn load(path: &Path) -> Result<HashMap<String, SQLEngineConfig>, String> {
         if !path.exists() {
             let mut default_config = HashMap::new();
+
+            // Create an example for postgres
             default_config.insert(
                 "Default Database".to_string(),
                 SQLEngineConfig {
                     database_type: DatabaseType::Postgres,
                     username: "postgres".to_string(),
                     password: "postgres".to_string(),
-                    file_path: String::new(),
+                    database: String::new(),
                     host: "localhost".to_string(),
                     port: "5432".to_string(),
+                },
+            );
+
+            // Create an example for sqlite
+            default_config.insert(
+                "Default Database".to_string(),
+                SQLEngineConfig {
+                    database_type: DatabaseType::SQLite,
+                    username: String::new(),
+                    password: String::new(),
+                    database: "/database.sqlite".to_string(),
+                    host: String::new(),
+                    port: String::new(),
+                },
+            );
+
+
+            // Create an example for sqlite
+            default_config.insert(
+                "Default Database".to_string(),
+                SQLEngineConfig {
+                    database_type: DatabaseType::SQLServer,
+                    username: "sa".to_string(),
+                    password: "Some Good (!) P455w0rd!".to_string(),
+                    database: "chinook".to_string(),
+                    host: "localhost".to_string(),
+                    port: "1433".to_string(),
                 },
             );
 

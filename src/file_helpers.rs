@@ -1,7 +1,5 @@
 use crate::helpers::TableParquet;
 use duckdb::Connection;
-use polars::frame::DataFrame;
-use polars::prelude::ParquetWriter;
 use std::path::{Path, PathBuf};
 
 // TODO I would like to make this a default trait method
@@ -35,24 +33,21 @@ pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, sch
                 // Yeah let's collect the paths of duckdb files that need to be loaded in
                 // then we can open once and immediately close
 
-                duckdb_conn
-                    .execute(
-                        // https://duckdb.org/docs/data/parquet/overview.html
-                        &format!(
-                            "CREATE OR REPLACE TABLE {schema}.{} AS SELECT * FROM '{}';",
-                            &parquet_path.table_name,
-                            &path_str.to_string()
-                        ),
-                        [],
-                    )
-                    .unwrap_or_else(|e| {
-                        panic!(
-                            "
-                    Unable to read table {} from path {}\n{}
-                    ",
-                            parquet_path.table_name, path_str, e
-                        )
-                    });
+                match duckdb_conn.execute(
+                    // https://duckdb.org/docs/data/parquet/overview.html
+                    &format!(
+                        "CREATE OR REPLACE TABLE {schema}.{} AS SELECT * FROM '{}';",
+                        &parquet_path.table_name,
+                        &path_str.to_string()
+                    ),
+                    [],
+                ) {
+                    Ok(_n) => {}
+                    Err(e) => eprintln!(
+                        "ERROR! Unable to read table {} from path {}\n{} ",
+                        parquet_path.table_name, path_str, e
+                    ),
+                }
             }
             None => eprintln!(
                 "Unable to get path string from {:?}",
@@ -62,17 +57,3 @@ pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, sch
     }
 }
 
-pub fn write_dataframe_to_parquet(df: &mut DataFrame, filename: &Path) {
-    // Write the Parquet File
-    let mut file = std::fs::File::create(filename).expect("Unable to create parquet file");
-    ParquetWriter::new(&mut file)
-        .finish(df)
-        .expect("Unable to write parquet file");
-    let mut file = std::fs::File::create(filename).expect("Unable to create parquet file");
-
-    ParquetWriter::new(&mut file)
-        .finish(df)
-        .expect("Unable to write parquet file");
-
-    println!("Export Successful for: {:?}!", &filename);
-}

@@ -6,3 +6,4 @@
     - don't panic
 - Pass in desired output path
 - may as well add maria and sqlite
+- Watch logic

@@ -1,12 +1,13 @@
 pub mod types;
 
 use crate::config::SQLEngineConfig;
-use crate::file_helpers::{write_dataframe_to_parquet, write_parquet_files_to_duckdb_table};
+use crate::file_helpers::write_parquet_files_to_duckdb_table;
 use crate::helpers::TableParquet;
 use connectorx::destinations::arrow::ArrowDestinationError;
 use connectorx::prelude::*;
 use polars::error::PolarsError;
 use polars::frame::DataFrame;
+use polars::prelude::ParquetWriter;
 use std::io;
 use std::path::Path;
 use types::DatabaseType;
@@ -16,6 +17,7 @@ pub enum DatabaseError {
     ArrowError(ConnectorXOutError),
     DataFrameError(ArrowDestinationError),
     PolarsError(PolarsError),
+    IoError(std::io::Error),
 }
 
 impl std::fmt::Display for DatabaseError {
@@ -24,6 +26,7 @@ impl std::fmt::Display for DatabaseError {
             DatabaseError::ArrowError(e) => write!(f, "Arrow destination error: {e}"),
             DatabaseError::DataFrameError(e) => write!(f, "DataFrame error: {e}"),
             DatabaseError::PolarsError(e) => write!(f, "Polars error: {e}"),
+            DatabaseError::IoError(e) => write!(f, "IO Error: {e}"),
         }
     }
 }
@@ -45,6 +48,12 @@ impl From<ArrowDestinationError> for DatabaseError {
 impl From<PolarsError> for DatabaseError {
     fn from(error: PolarsError) -> Self {
         DatabaseError::PolarsError(error)
+    }
+}
+
+impl From<std::io::Error> for DatabaseError {
+    fn from(error: std::io::Error) -> Self {
+        DatabaseError::IoError(error)
     }
 }
 
@@ -133,12 +142,11 @@ trait InternalDatabaseOperations {
         let queries = &[CXQuery::from(&query)];
 
         // Get a Destination using Arrow
-        let destination = get_arrow(self.get_connection(), None, queries)
-            .map_err(DatabaseError::from)?;
+        let destination =
+            get_arrow(self.get_connection(), None, queries).map_err(DatabaseError::from)?;
 
         // Get a Dataframe
-        let data = destination.polars()
-            .map_err(DatabaseError::from)?;
+        let data = destination.polars().map_err(DatabaseError::from)?;
 
         // Extract column and convert to strings
         let col_of_strings = data
@@ -147,7 +155,7 @@ trait InternalDatabaseOperations {
             .try_str()
             .ok_or_else(|| {
                 DatabaseError::PolarsError(PolarsError::ComputeError(
-                    format!("Unable to parse column {colname} as strings").into()
+                    format!("Unable to parse column {colname} as strings").into(),
                 ))
             })?;
 
@@ -197,7 +205,9 @@ impl Database {
     /// A new instance of the implementing type.
     pub fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Database {
         let uri = db_type.create_connection_string(&config);
-        let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
+        let source_conn = SourceConn::try_from(uri.as_str()).unwrap_or_else(|e| {
+            panic!("Unable to connect to database using connection string: {uri}\n{e}")
+        });
 
         Database {
             config,
@@ -213,11 +223,19 @@ impl Database {
     ///
     /// * `limit` - An optional limit on the number of rows to retrieve from each table.
     #[allow(dead_code)]
-    pub fn print_all_tables_as_dataframes(&self, limit: Option<u32>) {
-        for table in self.get_tables() {
-            let df = self.get_dataframe(&table, limit);
-            println!("{:#?}", df);
+    pub fn print_all_tables_as_dataframes(&self, limit: Option<u32>) -> Result<(), DatabaseError> {
+        let mut failures = vec![];
+        for table in self.get_tables()? {
+            match self.get_dataframe(&table, limit) {
+                Ok(df) => println!("{:#?}", df),
+                Err(e) => failures.push((table.clone(), e)),
+            };
+            if failures.len() > 0 {
+                eprintln!("Unable to print tables: {:#?}", failures);
+            }
         }
+
+        Ok(())
     }
 
     /// Retrieves a DataFrame for a given table with an optional row limit.
@@ -264,7 +282,11 @@ impl Database {
     ///
     /// * `parquet_path` - A reference to a `TableParquet` struct containing the table name and file path.
     /// * `limit` - An optional limit on the number of rows to retrieve from the table.
-    pub fn write_to_parquet(&self, parquet_path: &TableParquet, limit: Option<u32>) -> Result<(), DatabaseError> {
+    pub fn write_to_parquet(
+        &self,
+        parquet_path: &TableParquet,
+        limit: Option<u32>,
+    ) -> Result<(), DatabaseError> {
         // Get the dataframe for the table
         let mut df = self.get_dataframe(&parquet_path.table_name, limit)?;
 
@@ -292,7 +314,10 @@ impl Database {
 
         // Write to files
         for tp in &parquet_paths {
-            self.write_to_parquet(tp, limit)?;
+            match self.write_to_parquet(tp, limit) {
+                Ok(_) => {}
+                Err(e) => eprintln!("{e}"),
+            }
         }
 
         // Write to duckdb
@@ -317,16 +342,34 @@ impl Database {
         table: &str,
         filename: &Path,
         limit: Option<u32>,
-    ) -> io::Result<()> {
+    ) -> Result<(), DatabaseError> {
         // Create all directories
         std::fs::create_dir_all(filename)?;
 
         // Get the dataframe
-        let mut df = self.get_dataframe(table, limit);
+        let mut df = self.get_dataframe(table, limit)?;
 
         // Write the dataframe to parquet
-        write_dataframe_to_parquet(&mut df, filename);
+        write_dataframe_to_parquet(&mut df, filename)?;
 
         Ok(())
     }
+}
+
+// TODO don't panic
+pub fn write_dataframe_to_parquet(df: &mut DataFrame, filename: &Path) -> Result<(), DatabaseError> {
+    // Write the Parquet File
+    let mut file = std::fs::File::create(filename)?;
+    ParquetWriter::new(&mut file)
+        .finish(df)
+        .expect("Unable to write parquet file");
+    let mut file = std::fs::File::create(filename)?;
+
+    ParquetWriter::new(&mut file)
+        .finish(df)
+        .expect("Unable to write parquet file");
+
+    println!("Export Successful for: {:?}!", &filename);
+
+    Ok(())
 }
