@@ -52,10 +52,9 @@ impl DatabaseType {
             },
             DatabaseType::Postgres => GetTablesQuery {
                 query: r#"
-                    SELECT tablename as table_name
-                    FROM pg_catalog.pg_tables
-                    WHERE schemaname != 'pg_catalog' AND
-                        schemaname != 'information_schema';"#
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema='public' AND table_type='BASE TABLE';"#
                     .to_string(),
                 column_name: "table_name".to_string(),
             },
