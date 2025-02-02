@@ -44,7 +44,7 @@ pub fn write_parquet_files_to_duckdb_table(
     let duckdb_conn =
         Connection::open(PathBuf::from(file_location)).map_err(DuckDBError::ConnectionError)?;
 
-    create_schema(schema, &duckdb_conn);
+    create_schema(schema, &duckdb_conn)?;
 
     for parquet_path in parquet_paths {
         // Change into the directory
@@ -83,19 +83,29 @@ pub fn write_parquet_files_to_duckdb_table(
     Ok(())
 }
 
-pub fn create_schema(schema: &str, conn: &Connection) {
-    // Get a variable that contains whether or not the table exists AI!
-    conn.execute(
-        &format!(
-            r#"
-            SELECT COUNT(*) > 0 AS schema_exists
-            FROM information_schema.schemata
-            WHERE schema_name = '{}';
-            "#,
-            &sanitize_schema(schema),
-        ),
-        [],
-    );
+pub fn create_schema(schema: &str, conn: &Connection) -> Result<(), DuckDBError> {
+    let schema = &sanitize_schema(schema);
+    
+    // First check if schema exists
+    let mut stmt = conn
+        .prepare(
+            "SELECT COUNT(*) > 0 AS schema_exists 
+             FROM information_schema.schemata 
+             WHERE schema_name = ?",
+        )
+        .map_err(DuckDBError::ExecutionError)?;
+
+    let exists: bool = stmt
+        .query_row([schema], |row| row.get(0))
+        .map_err(DuckDBError::ExecutionError)?;
+
+    // Create schema if it doesn't exist
+    if !exists {
+        conn.execute(&format!("CREATE SCHEMA {schema}"), [])
+            .map_err(DuckDBError::ExecutionError)?;
+    }
+
+    Ok(())
 }
 
 /// Modify a string so it can be a valid duckdb schema
