@@ -7,7 +7,6 @@ mod helpers;
 use clap::Parser;
 use cli::Cli;
 use config::SQLEngineConfig;
-use database::types::DatabaseType;
 use database::Database;
 use std::collections::HashMap;
 use std::process;

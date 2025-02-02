@@ -8,7 +8,6 @@ use connectorx::prelude::*;
 use polars::error::PolarsError;
 use polars::frame::DataFrame;
 use polars::prelude::ParquetWriter;
-use std::io;
 use std::path::Path;
 use types::DatabaseType;
 
@@ -230,7 +229,7 @@ impl Database {
                 Ok(df) => println!("{:#?}", df),
                 Err(e) => failures.push((table.clone(), e)),
             };
-            if failures.len() > 0 {
+            if !failures.is_empty() {
                 eprintln!("Unable to print tables: {:#?}", failures);
             }
         }
@@ -357,7 +356,10 @@ impl Database {
 }
 
 // TODO don't panic
-pub fn write_dataframe_to_parquet(df: &mut DataFrame, filename: &Path) -> Result<(), DatabaseError> {
+pub fn write_dataframe_to_parquet(
+    df: &mut DataFrame,
+    filename: &Path,
+) -> Result<(), DatabaseError> {
     // Write the Parquet File
     let mut file = std::fs::File::create(filename)?;
     ParquetWriter::new(&mut file)

@@ -46,7 +46,6 @@ impl SQLEngineConfig {
                 },
             );
 
-
             // Create an example for sqlite
             default_config.insert(
                 "Default Database".to_string(),

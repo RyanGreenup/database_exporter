@@ -1,6 +1,6 @@
 use crate::helpers::TableParquet;
 use duckdb::Connection;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 // TODO I would like to make this a default trait method
 // But I can't because it requires the duckdb_conn
@@ -56,4 +56,3 @@ pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, sch
         };
     }
 }
-
