@@ -32,7 +32,15 @@ pub trait DatabaseOperations {
     /// Returns a reference to the database connection.
     fn get_connection(&self) -> &connectorx::source_router::SourceConn;
 
-    // Write a docstring AI!
+    /// Creates a new instance of SQLServer with the provided configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The configuration for the SQL engine.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of SQLServer.
     fn new(config: SQLEngineConfig) -> Self
     where
         Self: Sized;
