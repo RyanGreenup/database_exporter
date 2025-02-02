@@ -347,6 +347,7 @@ impl Database {
                 writable_parquet_paths,
                 schema,
                 &export_directory.join(opts.file_name.clone()),
+                opts.separator.as_deref(),
             )?;
         }
         Ok(())
@@ -383,7 +384,7 @@ impl Database {
     }
 }
 
-// TODO don't panic
+// Add a docstring AI!
 pub fn write_dataframe_to_parquet(
     df: &mut DataFrame,
     filename: &Path,
