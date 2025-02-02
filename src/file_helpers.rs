@@ -119,7 +119,7 @@ pub fn create_schema(schema: &str, conn: &Connection) -> Result<(), DuckDBError>
     Ok(())
 }
 
-/// Modify a string so it can be a valid duckdb schema
+// Write a docstring AI!
 pub fn sanitize_schema(schema: &str) -> String {
     let sanitized: String = schema
         .chars()
