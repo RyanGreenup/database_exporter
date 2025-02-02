@@ -9,6 +9,7 @@ use polars::prelude::ParquetWriter;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::io;
 
 pub struct GetTablesQuery {
     /// The query that will return all tables for the given database
@@ -149,7 +150,7 @@ pub trait DatabaseOperations {
         write_dataframe_to_parquet(&mut df, filename);
     }
 
-    fn write_table_to_parquet_path(&self, table: &str, filename: &Path) -> Result<(), > {
+    fn write_table_to_parquet_path(&self, table: &str, filename: &Path) -> io::Result<()> {
         // Create all directories
         std::fs::create_dir_all(filename)?;
 
