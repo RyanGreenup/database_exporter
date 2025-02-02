@@ -225,7 +225,11 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     }
 
 
-    // Write a docstring AI!
+    /// Exports DataFrames for all tables to Parquet files and loads them into DuckDB.
+    ///
+    /// # Arguments
+    ///
+    /// * `limit` - An optional limit on the number of rows to retrieve from each table.
     fn export_dataframes(&self, limit: Option<u32>) {
         // Get paths to parquet files
         let parquet_paths: Vec<TableParquet> = self
