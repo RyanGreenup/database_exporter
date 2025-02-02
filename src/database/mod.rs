@@ -151,6 +151,7 @@ trait InternalDatabaseOperations {
         let queries = &[CXQuery::from(&query)];
 
         // Get a Destination using Arrow
+        // NOTE this throws an error when using NUMERIC type with sqlite3, use REAL type instead
         get_arrow(self.get_connection(), None, queries)
     }
 
