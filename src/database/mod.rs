@@ -214,6 +214,7 @@ impl InternalDatabaseOperations for Database {
     }
 }
 
+// Add a docstring AI!
 impl Database {
     /// Creates a new instance of a database connection with the provided configuration.
     ///
