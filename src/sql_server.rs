@@ -90,8 +90,8 @@ impl DatabaseType {
 
 #[derive(Debug)]
 pub struct Database {
-    pub config: SQLEngineConfig,  // TODO Dead but good for debugging
-    uri_string: String,           // TODO Dead Code but good for debugging
+    pub config: SQLEngineConfig, // TODO Dead but good for debugging
+    uri_string: String,          // TODO Dead Code but good for debugging
     source_conn: SourceConn,
     db_type: DatabaseType,
 }
@@ -200,12 +200,21 @@ trait InternalDatabaseOperations {
     }
 }
 
-/// Provides public operations for interacting with a Connector-X database
-///
-/// This trait extends `InternalDatabaseOperations` and provides additional methods
-/// for common tasks such as printing tables, retrieving dataframes, writing to Parquet,
-/// and exporting dataframes to DuckDB.
-pub trait PublicDatabaseOperations: InternalDatabaseOperations {
+impl InternalDatabaseOperations for Database {
+    fn get_connection(&self) -> &connectorx::source_router::SourceConn {
+        &self.source_conn
+    }
+
+    fn get_table_query(&self, table: &str, limit: Option<u32>) -> String {
+        self.db_type.get_rows_query(table, limit)
+    }
+
+    fn get_query_all_tables(&self) -> GetTablesQuery {
+        self.db_type.get_tables_query()
+    }
+}
+
+impl Database {
     /// Creates a new instance of a database connection with the provided configuration.
     ///
     /// # Arguments
@@ -216,7 +225,7 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     /// # Returns
     ///
     /// A new instance of the implementing type.
-    fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Database {
+    pub fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Database {
         let uri = db_type.create_connection_string(&config);
         let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
 
@@ -234,7 +243,7 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     ///
     /// * `limit` - An optional limit on the number of rows to retrieve from each table.
     #[allow(dead_code)]
-    fn print_all_tables_as_dataframes(&self, limit: Option<u32>) {
+    pub fn print_all_tables_as_dataframes(&self, limit: Option<u32>) {
         for table in self.get_tables() {
             let df = self.get_dataframe(&table, limit);
             println!("{:#?}", df);
@@ -251,7 +260,7 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     /// # Returns
     ///
     /// A DataFrame containing the retrieved data.
-    fn get_dataframe(&self, table: &str, limit: Option<u32>) -> DataFrame {
+    pub fn get_dataframe(&self, table: &str, limit: Option<u32>) -> DataFrame {
         // Get the arrow Destination
         let destination = self.get_arrow_destination(table, limit);
 
@@ -264,7 +273,7 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
 
     /// Prints the names of all tables to the console.
     #[allow(dead_code)]
-    fn print_tables(&self) {
+    pub fn print_tables(&self) {
         for table in self.get_tables() {
             println!("{table}");
         }
@@ -280,7 +289,7 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     ///
     /// * `parquet_path` - A reference to a `TableParquet` struct containing the table name and file path.
     /// * `limit` - An optional limit on the number of rows to retrieve from the table.
-    fn write_to_parquet(&self, parquet_path: &TableParquet, limit: Option<u32>) {
+    pub fn write_to_parquet(&self, parquet_path: &TableParquet, limit: Option<u32>) {
         // Get the dataframe for the table
         let mut df = self.get_dataframe(&parquet_path.table_name, limit);
 
@@ -289,6 +298,31 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
 
         // Write the dataframe to parquet
         write_dataframe_to_parquet(&mut df, filename);
+    }
+
+    /// Exports DataFrames for all tables to Parquet files and loads them into DuckDB.
+    ///
+    /// # Arguments
+    ///
+    /// * `limit` - An optional limit on the number of rows to retrieve from each table.
+    pub fn export_dataframes(&self, limit: Option<u32>) {
+        // Get paths to parquet files
+        let parquet_paths: Vec<TableParquet> = self
+            .get_tables()
+            // Consume the original vector
+            .into_iter()
+            // Cast to TableParquet which generates a file path
+            .map(|table_name| TableParquet::new(&table_name))
+            // Collect into an iterator
+            .collect();
+
+        // Write to files
+        for tp in &parquet_paths {
+            self.write_to_parquet(&tp, limit);
+        }
+
+        // Write to duckdb
+        write_parquet_files_to_duckdb_table(parquet_paths, None);
     }
 
     /// Writes a DataFrame for a given table to a specified Parquet file path.
@@ -320,45 +354,4 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
 
         Ok(())
     }
-
-    /// Exports DataFrames for all tables to Parquet files and loads them into DuckDB.
-    ///
-    /// # Arguments
-    ///
-    /// * `limit` - An optional limit on the number of rows to retrieve from each table.
-    fn export_dataframes(&self, limit: Option<u32>) {
-        // Get paths to parquet files
-        let parquet_paths: Vec<TableParquet> = self
-            .get_tables()
-            // Consume the original vector
-            .into_iter()
-            // Cast to TableParquet which generates a file path
-            .map(|table_name| TableParquet::new(&table_name))
-            // Collect into an iterator
-            .collect();
-
-        // Write to files
-        for tp in &parquet_paths {
-            self.write_to_parquet(&tp, limit);
-        }
-
-        // Write to duckdb
-        write_parquet_files_to_duckdb_table(parquet_paths, None);
-    }
 }
-
-impl InternalDatabaseOperations for Database {
-    fn get_connection(&self) -> &connectorx::source_router::SourceConn {
-        &self.source_conn
-    }
-
-    fn get_table_query(&self, table: &str, limit: Option<u32>) -> String {
-        self.db_type.get_rows_query(table, limit)
-    }
-
-    fn get_query_all_tables(&self) -> GetTablesQuery {
-        self.db_type.get_tables_query()
-    }
-}
-
-impl PublicDatabaseOperations for Database {}

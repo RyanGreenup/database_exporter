@@ -29,9 +29,3 @@ impl TableParquet {
     }
 }
 
-pub struct DataFrameTable {
-    pub parquet_file_path: PathBuf,
-    pub table_name: String,
-    pub dataframe: DataFrame,
-}
-
