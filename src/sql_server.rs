@@ -91,7 +91,16 @@ pub trait DatabaseOperations {
         get_arrow(&self.get_connection(), None, queries).expect("Run Failed")
     }
 
-    // Write a docstring AI!
+    /// Retrieves a DataFrame for a given table with an optional row limit.
+    ///
+    /// # Arguments
+    ///
+    /// * `table` - The name of the table to retrieve data from.
+    /// * `limit` - An optional limit on the number of rows to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// A DataFrame containing the retrieved data.
     fn get_dataframe(&self, table: &str, limit: Option<u32>) -> DataFrame {
         // Get the arrow Destination
         let destination = self.get_arrow_destination(table, limit);
