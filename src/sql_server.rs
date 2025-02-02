@@ -178,7 +178,12 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     // File Operations ........................................................
      */
 
-    // Write a docstring AI!
+    /// Writes a DataFrame to a Parquet file.
+    ///
+    /// # Arguments
+    ///
+    /// * `parquet_path` - A reference to a `TableParquet` struct containing the table name and file path.
+    /// * `limit` - An optional limit on the number of rows to retrieve from the table.
     fn write_to_parquet(&self, parquet_path: &TableParquet, limit: Option<u32>) {
         // Get the dataframe for the table
         let mut df = self.get_dataframe(&parquet_path.table_name, limit);
