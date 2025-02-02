@@ -29,9 +29,9 @@ fn main() {
 fn run(configs: HashMap<String, SQLEngineConfig>) {
     for (name, config) in configs {
         println!("Processing database: {}", name);
-        
+
         let db = Database::new(config.clone(), config.database_type);
-        
+
         // Export all dataframes
         // TODO this should be a toml parameter or a CLI Parameter
         db.export_dataframes(None);
