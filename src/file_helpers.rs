@@ -142,7 +142,24 @@ pub fn sanitize_schema(schema: &str) -> String {
     }
 }
 
-// Write a docstring AI!
+/// Attempts to remove a DuckDB database file at the specified location.
+///
+/// # Arguments
+///
+/// * `file_location` - Path to the DuckDB database file to remove
+///
+/// # Returns
+///
+/// * `Ok(())` if the file was successfully removed or didn't exist
+/// * `Err(DuckDBError)` if there was an error removing the file (except for NotFound errors which are ignored)
+///
+/// # Examples
+///
+/// ```
+/// use std::path::Path;
+/// let db_path = Path::new("./my_database.db");
+/// remove_database(&db_path)?; // Removes if exists, does nothing if not found
+/// ```
 pub fn remove_database(file_location: &Path) -> Result<(), DuckDBError> {
     // Remove the database if it exists
     match std::fs::remove_file(file_location) {
