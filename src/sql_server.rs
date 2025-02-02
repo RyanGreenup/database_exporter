@@ -195,7 +195,17 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
         write_dataframe_to_parquet(&mut df, filename);
     }
 
-    // Write a docstring AI!
+    /// Writes a DataFrame for a given table to a specified Parquet file path.
+    ///
+    /// # Arguments
+    ///
+    /// * `table` - The name of the table to retrieve data from.
+    /// * `filename` - A reference to the `Path` where the Parquet file will be written.
+    /// * `limit` - An optional limit on the number of rows to retrieve from the table.
+    ///
+    /// # Returns
+    ///
+    /// An `io::Result<()>` indicating success or failure.
     fn write_table_to_parquet_path(
         &self,
         table: &str,
