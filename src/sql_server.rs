@@ -165,7 +165,6 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
         return df;
     }
 
-
     /// Prints the names of all tables to the console.
     fn print_tables(&self) {
         for table in self.get_optional_tables() {
@@ -175,7 +174,11 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
         }
     }
 
-    // File Operations
+    /*
+    // File Operations ........................................................
+     */
+
+    // Write a docstring AI!
     fn write_to_parquet(&self, parquet_path: &TableParquet, limit: Option<u32>) {
         // Get the dataframe for the table
         let mut df = self.get_dataframe(&parquet_path.table_name, limit);
