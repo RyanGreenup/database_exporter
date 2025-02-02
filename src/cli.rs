@@ -23,14 +23,20 @@ pub struct Cli {
     #[arg(default_value_t = String::from("./data/extracted/parquets"), short, long)]
     export_directory: String,
 
+    #[command(flatten)]
+    #[clap(next_help_heading = "Database Options")]
+    pub database: DatabaseOptions,
+}
+
+#[derive(Parser, Debug)]
+pub struct DatabaseOptions {
     /// Create Duckdb from all Parquet files
     #[arg(default_value_t = true, short, long)]
     pub include_duckdb: bool,
 
     /// Database Name for duckdb export, this will be underneath the export directory
     #[arg(default_value_t = String::from("database.duckdb"), short, long)]
-    pub duckdb_file_name: String
-
+    pub duckdb_file_name: String,
 }
 
 impl Cli {
@@ -56,6 +62,6 @@ impl Cli {
         std::fs::create_dir_all(&path)
             .unwrap_or_else(|e| panic!("Unable to create directory: {:?}\n{e}", &path));
 
-        return path;
+        path
     }
 }
