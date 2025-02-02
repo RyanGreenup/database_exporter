@@ -1,7 +1,9 @@
 use crate::config::SQLEngineConfig;
+use crate::helpers::TableParquet;
 use connectorx::prelude::*;
 use duckdb::{params, Connection, Result};
 use polars::frame::DataFrame;
+use polars::io::parquet;
 use polars::prelude::ParquetWriter;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -21,17 +23,24 @@ pub struct SQLServer {
     pub uri_string: String,
     source_conn: SourceConn,
     // TODO must drop this automagically
-    duckdb_conn: Connection,
+    // duckdb_conn: Connection,
+}
+
+pub trait HasConnection {
+    type SourceConn;
+
+    fn connection(&self) -> &Self::SourceConn;
 }
 
 pub trait DatabaseOperations {
+    /// Get the active connection to the database
+    fn get_connection(&self) -> &connectorx::source_router::SourceConn;
+
+    /// Construct the Database Object from the config
     fn new(config: SQLEngineConfig) -> Self
     where
         Self: Sized;
-    fn get_optional_tables(&self) -> Vec<Option<String>>;
     fn get_query_all_tables() -> GetTablesQuery;
-    fn print_tables(&self);
-    fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination;
     fn make_duckdb_connection() -> Connection {
         Connection::open(PathBuf::from("./data.duckdb")).expect("Unable to create duckdb file")
     }
@@ -45,6 +54,20 @@ pub trait DatabaseOperations {
         }
     }
 
+    fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination {
+        // Build the query
+        let query = match limit {
+            Some(n) => format!("SELECT TOP {} * FROM {}", n, table),
+            None => format!("SELECT * FROM {}", table),
+        };
+
+        // Get the query for the table
+        let queries = &[CXQuery::from(&query)];
+
+        // Get a Destination using Arrow
+        get_arrow(&self.get_connection(), None, queries).expect("Run Failed")
+    }
+
     fn get_dataframe(&self, table: &str, limit: Option<u32>) -> DataFrame {
         // Get the arrow Destination
         let destination = self.get_arrow_destination(table, limit);
@@ -54,56 +77,6 @@ pub trait DatabaseOperations {
         let df = destination.polars().expect("Unable to get Dataframe");
 
         return df;
-    }
-}
-
-impl DatabaseOperations for SQLServer {
-    /// See connectorx docs for the mssql docstring
-    /// https://sfu-db.github.io/connector-x/databases/mssql.html
-    fn new(config: SQLEngineConfig) -> SQLServer {
-        // Define the database credentials
-        let mut uri = format!(
-            "mssql://{}:{}@{}:{}/{}",
-            config.username, config.password, config.host, config.port, config.database
-        );
-        uri = format!("{uri}?encrypt=false");
-        uri = format!("{uri}&trusted_connection=false");
-        uri = format!("{uri}&trust_server_certificate=true");
-        let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
-        // TODO this should take from the toml or the CLI
-        // TODO this must respect the extracted path (which should be configurable in the toml
-        // TODO this should use an immutable private attribute for the db location
-        Self {
-            config,
-            uri_string: uri,
-            source_conn,
-            duckdb_conn: Self::make_duckdb_connection(),
-        }
-    }
-
-    /// A Query to get all tables
-    fn get_query_all_tables() -> GetTablesQuery {
-        let column_name = "table_name".into();
-        let query = format!(
-            r#"
-        SELECT TABLE_NAME as {}
-        FROM INFORMATION_SCHEMA.TABLES
-        WHERE TABLE_TYPE = 'BASE TABLE' AND
-            TABLE_SCHEMA != 'scratch';
-        "#,
-            column_name
-        );
-
-        GetTablesQuery { query, column_name }
-    }
-
-    // Returns tables, an empty string indicates a missing
-    fn print_tables(&self) {
-        for table in self.get_optional_tables() {
-            if let Some(t) = table {
-                println!("{t}")
-            }
-        }
     }
 
     /// Returns tables as optional values
@@ -119,7 +92,7 @@ impl DatabaseOperations for SQLServer {
         let queries = &[CXQuery::from(&query)];
 
         // Get a Destination using Arrow
-        let destination = get_arrow(&self.source_conn, None, queries).expect("Run Failed");
+        let destination = get_arrow(self.get_connection(), None, queries).expect("Run Failed");
 
         // Get a Dataframe (NOTE must have same polars_core version in connectorx
         // and polars, look at `cargo tree | grep polars-core`)
@@ -154,57 +127,21 @@ impl DatabaseOperations for SQLServer {
         vec_of_table_names
     }
 
-    fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination {
-        // Build the query
-        let query = match limit {
-            Some(n) => format!("SELECT TOP {} * FROM {}", n, table),
-            None => format!("SELECT * FROM {}", table),
-        };
-
-        // Get the query for the table
-        let queries = &[CXQuery::from(&query)];
-
-        // Get a Destination using Arrow
-        get_arrow(&self.source_conn, None, queries).expect("Run Failed")
-    }
-}
-
-/// Represents a parquet file associated with a specific database table.
-pub struct TableParquet {
-    file_path: PathBuf,
-    table_name: String,
-}
-impl TableParquet {
-    pub fn new(table_name: &str) -> Self {
-        // TODO choose a directory -- CLI?
-        // TODO confirm the directory exists, this should be handled by above mechanism
-        // Make a directory called ./parquets/
-        // TODO this should be a toml parameter or a CLI Parameter
-        let dirname = PathBuf::from("./data/extracted/parquets");
-        std::fs::create_dir_all(&dirname).unwrap_or_else(|e| {
-            panic!("Unable to create directory: {:?}\n{e}", dirname);
-        });
-
-        // Filename
-        let mut filename = PathBuf::from(format!("{table_name}.parquet"));
-        filename = dirname.join(&filename);
-
-        Self {
-            file_path: filename,
-            table_name: String::from(table_name),
+    // Returns tables, an empty string indicates a missing
+    fn print_tables(&self) {
+        for table in self.get_optional_tables() {
+            if let Some(t) = table {
+                println!("{t}")
+            }
         }
     }
-}
 
-pub trait ExportOperations {
-    fn write_to_parquet(&self, table: &str, limit: Option<u32>);
-    fn write_parquet_file_to_duckdb_table(&self, parquet_path: &TableParquet, schema: Option<&str>);
-}
+    // File Operations
 
-impl SQLServer {
     // TODO this should not panic so it can be looped
+
     // Consider returning the path or taking the TableParquet as input
-    pub fn write_to_parquet(&self, table: &str, limit: Option<u32>) {
+    fn write_to_parquet(&self, table: &str, limit: Option<u32>) {
         // Get the dataframe
         let mut df = self.get_dataframe(table, limit);
 
@@ -225,17 +162,74 @@ impl SQLServer {
 
         println!("Export Successful for: {:?}!", &filename);
     }
+}
 
+impl DatabaseOperations for SQLServer {
+    fn get_connection(&self) -> &connectorx::source_router::SourceConn {
+        &self.source_conn
+    }
+
+    /// See connectorx docs for the mssql docstring
+    /// https://sfu-db.github.io/connector-x/databases/mssql.html
+    fn new(config: SQLEngineConfig) -> SQLServer {
+        // Define the database credentials
+        // TODO this could be DRYer
+        let mut uri = format!(
+            "mssql://{}:{}@{}:{}/{}",
+            config.username, config.password, config.host, config.port, config.database
+        );
+        uri = format!("{uri}?encrypt=false");
+        uri = format!("{uri}&trusted_connection=false");
+        uri = format!("{uri}&trust_server_certificate=true");
+        let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
+        // TODO this should take from the toml or the CLI
+        // TODO this must respect the extracted path (which should be configurable in the toml
+        // TODO this should use an immutable private attribute for the db location
+        Self {
+            config,
+            uri_string: uri,
+            source_conn,
+            // duckdb_conn: Self::make_duckdb_connection(),
+        }
+    }
+
+    /// A Query to get all tables
+    fn get_query_all_tables() -> GetTablesQuery {
+        let column_name = "table_name".into();
+        let query = format!(
+            r#"
+        SELECT TABLE_NAME as {}
+        FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_TYPE = 'BASE TABLE' AND
+            TABLE_SCHEMA != 'scratch';
+        "#,
+            column_name
+        );
+
+        GetTablesQuery { query, column_name }
+    }
+}
+
+pub trait ExportOperations {
+    fn write_to_parquet(&self, table: &str, limit: Option<u32>);
+    fn write_parquet_file_to_duckdb_table(&self, parquet_path: &TableParquet, schema: Option<&str>);
+}
+
+impl SQLServer {
     pub fn export_dataframes(&self, limit: Option<u32>) {
+        let mut parquet_paths = vec![];
         for maybe_table in self.get_optional_tables() {
             if let Some(table) = maybe_table {
                 self.write_to_parquet(&table, limit);
                 // TODO set the schema based on the database name
                 // Use a variable in the config, e.g. database_name
                 let tp = TableParquet::new(&table);
-                self.write_parquet_file_to_duckdb_table(&tp, None);
+                // self.write_parquet_file_to_duckdb_table(&tp, None);
+                parquet_paths.push(&tp)
             }
         }
+
+        self.write_parquet_file_to_duckdb_table(parquet_paths, None);
     }
 
     // TODO I would like to make this a default trait method
@@ -250,39 +244,48 @@ impl SQLServer {
     // To save memory we should drop the dataframe before getting here
     pub fn write_parquet_file_to_duckdb_table(
         &self,
-        parquet_path: &TableParquet,
+        parquet_paths: Vec<&TableParquet>,
         schema: Option<&str>,
     ) {
         // Use main by default
         let schema = schema.unwrap_or("main");
 
-        // Change into the directory
-        match parquet_path.file_path.to_str() {
-            Some(path_str) => {
-                // Read the parquet as a file
-                self.duckdb_conn
-                    .execute(
-                        // https://duckdb.org/docs/data/parquet/overview.html
-                        &format!(
-                            "CREATE OR REPLACE TABLE {schema}.{} AS SELECT * FROM '{}';",
-                            &parquet_path.table_name,
-                            &path_str.to_string()
-                        ),
-                        [],
-                    )
-                    .unwrap_or_else(|e| {
-                        panic!(
-                            "
+        for parquet_path in parquet_paths {
+            // Change into the directory
+            match parquet_path.file_path.to_str() {
+                Some(path_str) => {
+                    // Read the parquet as a file
+                    // TODO
+                    // Is this expensive to open?
+                    // Should we load them all in at once to simplify locking operations
+                    // Yeah let's collect the paths of duckdb files that need to be loaded in
+                    // then we can open once and immediately close
+
+                    Connection::open(PathBuf::from("./data.duckdb"))
+                        .expect("Unable to create duckdb file")
+                        .execute(
+                            // https://duckdb.org/docs/data/parquet/overview.html
+                            &format!(
+                                "CREATE OR REPLACE TABLE {schema}.{} AS SELECT * FROM '{}';",
+                                &parquet_path.table_name,
+                                &path_str.to_string()
+                            ),
+                            [],
+                        )
+                        .unwrap_or_else(|e| {
+                            panic!(
+                                "
                     Unable to read table {} from path {}\n{}
                     ",
-                            parquet_path.table_name, path_str, e
-                        )
-                    });
-            }
-            None => eprintln!(
-                "Unable to get path string from {:?}",
-                parquet_path.file_path
-            ),
-        };
+                                parquet_path.table_name, path_str, e
+                            )
+                        });
+                }
+                None => eprintln!(
+                    "Unable to get path string from {:?}",
+                    parquet_path.file_path
+                ),
+            };
+        }
     }
 }
