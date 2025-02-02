@@ -53,8 +53,7 @@ fn run(
         match db.export_dataframes(
             row_limit,
             export_directory,
-            duckdb_options.is_some(),
-            &duckdb_options.as_ref().map_or("database.duckdb".to_string(), |o| o.file_name),
+            duckdb_options.as_ref(),
             &name,
         ) {
             Ok(_) => {}

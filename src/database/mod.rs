@@ -320,8 +320,7 @@ impl Database {
         &self,
         limit: Option<u32>,
         export_directory: &Path,
-        include_duckdb: bool,
-        database_name: &str,
+        duckdb_options: Option<DuckDBExportOptions>,
         schema: &str,
     ) -> Result<(), DatabaseError> {
         // Get paths to parquet files
@@ -341,12 +340,12 @@ impl Database {
             }
         }
 
-        if include_duckdb {
+        if let Some(opts) = duckdb_options {
             // Write to duckdb
             write_parquet_files_to_duckdb_table(
                 writable_parquet_paths,
                 schema,
-                &export_directory.join(database_name),
+                &export_directory.join(opts.file_name),
             )?;
         }
         Ok(())
