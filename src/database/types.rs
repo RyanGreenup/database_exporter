@@ -1,11 +1,5 @@
 use crate::config::SQLEngineConfig;
 use crate::database::GetTablesQuery;
-use crate::file_helpers::{write_dataframe_to_parquet, write_parquet_files_to_duckdb_table};
-use crate::helpers::TableParquet;
-use connectorx::prelude::*;
-use polars::frame::DataFrame;
-use std::io;
-use std::path::Path;
 
 /// Represents different types of SQL databases and their specific query formats
 /// Eventually this will be replaced with <connectorx::source_router::SourceType>
