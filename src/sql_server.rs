@@ -140,7 +140,7 @@ trait InternalDatabaseOperations {
     /// An ArrowDestination containing the retrieved data.
     fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination {
         // Build the query
-        let query = Self::get_table_query(table, limit);
+        let query = self.get_table_query(table, limit);
 
         // Get the query for the table
         let queries = &[CXQuery::from(&query)];
