@@ -166,11 +166,11 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     }
 
 
-    // Write a docstring AI!
+    /// Prints the names of all tables to the console.
     fn print_tables(&self) {
         for table in self.get_optional_tables() {
             if let Some(t) = table {
-                println!("{t}")
+                println!("{t}");
             }
         }
     }
