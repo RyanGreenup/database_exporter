@@ -28,42 +28,16 @@ pub struct SQLServer {
     // duckdb_conn: Connection,
 }
 
-pub trait DatabaseOperations {
+trait InternalDatabaseOperations {
     /// Returns a reference to the database connection.
     fn get_connection(&self) -> &connectorx::source_router::SourceConn;
 
-    /// Creates a new instance of SQLServer with the provided configuration.
-    ///
-    /// # Arguments
-    ///
-    /// * `config` - The configuration for the SQL engine.
+    /// Returns the query to retrieve all table names from the database.
     ///
     /// # Returns
     ///
-    /// A new instance of SQLServer.
-    fn new(config: SQLEngineConfig) -> Self
-    where
-        Self: Sized;
-
-
+    /// A `GetTablesQuery` struct containing the SQL query and the column name for table names.
     fn get_query_all_tables() -> GetTablesQuery;
-    fn make_duckdb_connection() -> Connection {
-        Connection::open(PathBuf::from("./data.duckdb")).expect("Unable to create duckdb file")
-    }
-
-    /// Prints all tables as DataFrames to the console.
-    ///
-    /// # Arguments
-    ///
-    /// * `limit` - An optional limit on the number of rows to retrieve from each table.
-    fn print_all_tables_as_dataframes(&self, limit: Option<u32>) {
-        for maybe_table in self.get_optional_tables() {
-            if let Some(table) = maybe_table {
-                let df = self.get_dataframe(&table, limit);
-                println!("{:#?}", df);
-            }
-        }
-    }
 
     /// Retrieves an ArrowDestination for a given table with an optional row limit.
     /// The ArrowDestination is an in-memory representation
@@ -91,27 +65,6 @@ pub trait DatabaseOperations {
 
         // Get a Destination using Arrow
         get_arrow(&self.get_connection(), None, queries).expect("Run Failed")
-    }
-
-    /// Retrieves a DataFrame for a given table with an optional row limit.
-    ///
-    /// # Arguments
-    ///
-    /// * `table` - The name of the table to retrieve data from.
-    /// * `limit` - An optional limit on the number of rows to retrieve.
-    ///
-    /// # Returns
-    ///
-    /// A DataFrame containing the retrieved data.
-    fn get_dataframe(&self, table: &str, limit: Option<u32>) -> DataFrame {
-        // Get the arrow Destination
-        let destination = self.get_arrow_destination(table, limit);
-
-        // Get a Dataframe (NOTE must have same polars_core version in connectorx
-        // and polars, look at `cargo tree | grep polars-core`)
-        let df = destination.polars().expect("Unable to get Dataframe");
-
-        return df;
     }
 
     /// Returns tables as optional values
@@ -161,8 +114,59 @@ pub trait DatabaseOperations {
 
         vec_of_table_names
     }
+}
 
-    // Returns tables, an empty string indicates a missing
+pub trait PublicDatabaseOperations: InternalDatabaseOperations {
+    /// Creates a new instance of SQLServer with the provided configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The configuration for the SQL engine.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of SQLServer.
+    fn new(config: SQLEngineConfig) -> Self
+    where
+        Self: Sized;
+
+    /// Prints all tables as DataFrames to the console.
+    ///
+    /// # Arguments
+    ///
+    /// * `limit` - An optional limit on the number of rows to retrieve from each table.
+    fn print_all_tables_as_dataframes(&self, limit: Option<u32>) {
+        for maybe_table in self.get_optional_tables() {
+            if let Some(table) = maybe_table {
+                let df = self.get_dataframe(&table, limit);
+                println!("{:#?}", df);
+            }
+        }
+    }
+
+    /// Retrieves a DataFrame for a given table with an optional row limit.
+    ///
+    /// # Arguments
+    ///
+    /// * `table` - The name of the table to retrieve data from.
+    /// * `limit` - An optional limit on the number of rows to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// A DataFrame containing the retrieved data.
+    fn get_dataframe(&self, table: &str, limit: Option<u32>) -> DataFrame {
+        // Get the arrow Destination
+        let destination = self.get_arrow_destination(table, limit);
+
+        // Get a Dataframe (NOTE must have same polars_core version in connectorx
+        // and polars, look at `cargo tree | grep polars-core`)
+        let df = destination.polars().expect("Unable to get Dataframe");
+
+        return df;
+    }
+
+
+    // Write a docstring AI!
     fn print_tables(&self) {
         for table in self.get_optional_tables() {
             if let Some(t) = table {
@@ -224,11 +228,28 @@ pub trait DatabaseOperations {
     }
 }
 
-impl DatabaseOperations for SQLServer {
+impl InternalDatabaseOperations for SQLServer {
     fn get_connection(&self) -> &connectorx::source_router::SourceConn {
         &self.source_conn
     }
 
+    fn get_query_all_tables() -> GetTablesQuery {
+        let column_name = "table_name".into();
+        let query = format!(
+            r#"
+        SELECT TABLE_NAME as {}
+        FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_TYPE = 'BASE TABLE' AND
+            TABLE_SCHEMA != 'scratch';
+        "#,
+            column_name
+        );
+
+        GetTablesQuery { query, column_name }
+    }
+}
+
+impl PublicDatabaseOperations for SQLServer {
     /// See connectorx docs for the mssql docstring
     /// https://sfu-db.github.io/connector-x/databases/mssql.html
     fn new(config: SQLEngineConfig) -> SQLServer {
@@ -249,27 +270,6 @@ impl DatabaseOperations for SQLServer {
             config,
             uri_string: uri,
             source_conn,
-            // duckdb_conn: Self::make_duckdb_connection(),
         }
-    }
-
-    /// Returns the query to retrieve all table names from the database.
-    ///
-    /// # Returns
-    ///
-    /// A `GetTablesQuery` struct containing the SQL query and the column name for table names.
-    fn get_query_all_tables() -> GetTablesQuery {
-        let column_name = "table_name".into();
-        let query = format!(
-            r#"
-        SELECT TABLE_NAME as {}
-        FROM INFORMATION_SCHEMA.TABLES
-        WHERE TABLE_TYPE = 'BASE TABLE' AND
-            TABLE_SCHEMA != 'scratch';
-        "#,
-            column_name
-        );
-
-        GetTablesQuery { query, column_name }
     }
 }
