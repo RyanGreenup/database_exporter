@@ -9,6 +9,7 @@ pub struct SQLEngineConfig {
     pub database_type: DatabaseType,
     pub username: String,
     pub password: String,
+    #[serde(default)]
     pub file_path: String, // Only used for sqlite
     pub host: String,
     pub port: String,
@@ -24,7 +25,7 @@ impl SQLEngineConfig {
                     database_type: DatabaseType::Postgres,
                     username: "postgres".to_string(),
                     password: "postgres".to_string(),
-                    file_path: "chinook".to_string(),
+                    file_path: String::new(),
                     host: "localhost".to_string(),
                     port: "5432".to_string(),
                 },
