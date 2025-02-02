@@ -41,6 +41,11 @@ pub trait DatabaseOperations {
         Connection::open(PathBuf::from("./data.duckdb")).expect("Unable to create duckdb file")
     }
 
+    /// Prints all tables as DataFrames to the console.
+    ///
+    /// # Arguments
+    ///
+    /// * `limit` - An optional limit on the number of rows to retrieve from each table.
     fn print_all_tables_as_dataframes(&self, limit: Option<u32>) {
         for maybe_table in self.get_optional_tables() {
             if let Some(table) = maybe_table {
