@@ -75,7 +75,10 @@ impl From<DuckDBError> for DatabaseError {
     }
 }
 
-// Add a docstring AI!
+/// Represents a query for retrieving table information from a database.
+///
+/// This struct encapsulates both the SQL query string used to retrieve table names
+/// and the name of the column that contains the table names in the query results.
 pub struct GetTablesQuery {
     /// The query that will return all tables for the given database
     query: String,
