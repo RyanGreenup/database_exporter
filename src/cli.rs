@@ -26,7 +26,12 @@ pub struct Cli {
     #[command(flatten)]
     #[clap(next_help_heading = "Database Options")]
     pub database: DatabaseOptions,
+
+    /// Limit the number of rows exported per table
+    #[arg(default_value_t = None, long)]
+    pub row_limit: Option<u32>,
 }
+
 
 #[derive(Parser, Debug)]
 pub struct DatabaseOptions {
@@ -38,9 +43,6 @@ pub struct DatabaseOptions {
     #[arg(default_value_t = String::from("database.duckdb"), short, long)]
     pub duckdb_file_name: String,
 
-    /// Limit the number of rows exported per table
-    #[arg(long)]
-    pub row_limit: Option<u32>,
 }
 
 #[derive(Debug, Clone)]
@@ -82,3 +84,26 @@ impl Cli {
         path
     }
 }
+
+/*
+
+#[derive(Clone, Debug)]
+struct Limit {
+    value: Option<u32>,
+}
+
+impl Limit {
+    pub fn default() -> Self {
+        Limit { value: None }
+    }
+}
+
+impl std::fmt::Display for Limit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.value {
+            Some(s) => write!(f, "{s}"),
+            None => write!(f, "Unlimited"),
+        }
+    }
+}
+*/
