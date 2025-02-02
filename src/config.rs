@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
@@ -19,16 +20,13 @@ pub struct SQLEngineConfig {
     pub port: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Config {
-    pub database: SQLEngineConfig,
-}
-
-impl Config {
-    pub fn load(path: &Path) -> Result<Self, String> {
+impl SQLEngineConfig {
+    pub fn load(path: &Path) -> Result<HashMap<String, SQLEngineConfig>, String> {
         if !path.exists() {
-            let default_config = Config {
-                database: SQLEngineConfig {
+            let mut default_config = HashMap::new();
+            default_config.insert(
+                "Default Database".to_string(),
+                SQLEngineConfig {
                     database_type: DatabaseType::Postgres,
                     username: "postgres".to_string(),
                     password: "postgres".to_string(),
@@ -36,7 +34,7 @@ impl Config {
                     host: "localhost".to_string(),
                     port: "5432".to_string(),
                 },
-            };
+            );
 
             let toml = toml::to_string(&default_config).map_err(|e| e.to_string())?;
             fs::write(path, toml).map_err(|e| e.to_string())?;
