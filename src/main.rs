@@ -72,6 +72,8 @@ fn run_and_watch(
     }
 }
 
+
+// Add a docstring  AI!
 fn run(
     configs: HashMap<String, SQLEngineConfig>,
     export_directory: &Path,
