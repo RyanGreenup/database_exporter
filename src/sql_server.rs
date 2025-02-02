@@ -26,6 +26,31 @@ pub enum DatabaseType {
 }
 
 impl DatabaseType {
+    /// Creates a connection string for the database type
+    pub fn create_connection_string(
+        &self,
+        config: &SQLEngineConfig,
+    ) -> String {
+        match self {
+            DatabaseType::SQLServer => {
+                let mut uri = format!(
+                    "mssql://{}:{}@{}:{}/{}",
+                    config.username, config.password, config.host, config.port, config.database
+                );
+                uri = format!("{uri}?encrypt=false");
+                uri = format!("{uri}&trusted_connection=false");
+                uri = format!("{uri}&trust_server_certificate=true");
+                uri
+            }
+            DatabaseType::PostgreSQL => {
+                format!(
+                    "postgresql://{}:{}@{}:{}/{}",
+                    config.username, config.password, config.host, config.port, config.database
+                )
+            }
+        }
+    }
+
     /// Returns the appropriate query structure for getting all tables in the database
     pub fn get_tables_query(&self) -> GetTablesQuery {
         match self {
@@ -331,24 +356,15 @@ impl PublicDatabaseOperations for SQLServer {
     /// See connectorx docs for the mssql docstring
     /// https://sfu-db.github.io/connector-x/databases/mssql.html
     fn new(config: SQLEngineConfig) -> SQLServer {
-        // Define the database credentials
-        // TODO this could be DRYer
-        let mut uri = format!(
-            "mssql://{}:{}@{}:{}/{}",
-            config.username, config.password, config.host, config.port, config.database
-        );
-        uri = format!("{uri}?encrypt=false");
-        uri = format!("{uri}&trusted_connection=false");
-        uri = format!("{uri}&trust_server_certificate=true");
+        let db_type = DatabaseType::SQLServer;
+        let uri = db_type.create_connection_string(&config);
         let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
-        // TODO this should take from the toml or the CLI
-        // TODO this must respect the extracted path (which should be configurable in the toml
-        // TODO this should use an immutable private attribute for the db location
+        
         Self {
             config,
             uri_string: uri,
             source_conn,
-            db_type: DatabaseType::SQLServer,
+            db_type,
         }
     }
 }
