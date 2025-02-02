@@ -63,8 +63,7 @@ pub trait DatabaseOperations {
         }
     }
 
-    /// Retrieves the database table as in-memory representation
-    /// which can later be transformed into other representations
+    // Write a docstring AI!
     fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination {
         // Build the query
         let query = match limit {
