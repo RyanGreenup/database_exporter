@@ -2,6 +2,25 @@ use crate::helpers::TableParquet;
 use duckdb::Connection;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug)]
+pub enum DuckDBError {
+    ConnectionError(duckdb::Error),
+    ExecutionError(duckdb::Error),
+    InvalidPathError(String),
+}
+
+impl std::fmt::Display for DuckDBError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DuckDBError::ConnectionError(e) => write!(f, "Failed to connect to DuckDB: {}", e),
+            DuckDBError::ExecutionError(e) => write!(f, "Failed to execute DuckDB query: {}", e),
+            DuckDBError::InvalidPathError(p) => write!(f, "Invalid path provided: {}", p),
+        }
+    }
+}
+
+impl std::error::Error for DuckDBError {}
+
 // TODO I would like to make this a default trait method
 // But I can't because it requires the duckdb_conn
 // Figure this out, maybe make it more general?
@@ -18,18 +37,12 @@ pub fn write_parquet_files_to_duckdb_table(
     parquet_paths: Vec<TableParquet>,
     schema: &str,
     file_location: &Path,
-) -> Result<(), std::error::Error> {
+) -> Result<(), DuckDBError> {
     let schema = &sanitize_schema(schema);
 
     // Open a connection
-    // Fix this error handling AI!
-    let duckdb_conn = match Connection::open(PathBuf::from(file_location)) {
-        Ok(conn) => conn,
-        Err(e) => {
-            eprintln!("Unable to open DuckDB Connection\n{e}");
-            return Err(e);
-        },
-    };
+    let duckdb_conn = Connection::open(PathBuf::from(file_location))
+        .map_err(DuckDBError::ConnectionError)?;
 
     let schema = create_schema(schema, &duckdb_conn);
 
