@@ -29,7 +29,7 @@ impl DatabaseType {
                 uri = format!("{uri}&trust_server_certificate=true");
                 uri
             }
-            DatabaseType::PostgreSQL => {
+            DatabaseType::Postgres => {
                 format!(
                     "postgresql://{}:{}@{}:{}/{}",
                     config.username, config.password, config.host, config.port, config.database
@@ -50,7 +50,7 @@ impl DatabaseType {
                     .to_string(),
                 column_name: "table_name".to_string(),
             },
-            DatabaseType::PostgreSQL => GetTablesQuery {
+            DatabaseType::Postgres => GetTablesQuery {
                 query: r#"
                     SELECT tablename as table_name
                     FROM pg_catalog.pg_tables
@@ -69,7 +69,7 @@ impl DatabaseType {
                 Some(n) => format!("SELECT TOP {} * FROM {}", n, table),
                 None => format!("SELECT * FROM {}", table),
             },
-            DatabaseType::PostgreSQL => match limit {
+            DatabaseType::Postgres => match limit {
                 Some(n) => format!("SELECT * FROM {} LIMIT {}", table, n),
                 None => format!("SELECT * FROM {}", table),
             },
