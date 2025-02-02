@@ -244,7 +244,7 @@ impl SQLServer {
     // To save memory we should drop the dataframe before getting here
     pub fn write_parquet_file_to_duckdb_table(
         &self,
-        parquet_paths: Vec<&TableParquet>,
+        parquet_paths: impl Iterator<Item = &TableParquet>,
         schema: Option<&str>,
     ) {
         // Use main by default
