@@ -2,9 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
-
-
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SQLEngineConfig {
     pub username: String,
@@ -13,7 +10,6 @@ pub struct SQLEngineConfig {
     pub host: String,
     pub port: String,
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {

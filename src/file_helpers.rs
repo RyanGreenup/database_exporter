@@ -1,12 +1,7 @@
-use crate::config::SQLEngineConfig;
 use crate::helpers::TableParquet;
-use connectorx::prelude::*;
-use duckdb::{params, Connection, Result};
+use duckdb::Connection;
 use polars::frame::DataFrame;
-use polars::io::parquet;
 use polars::prelude::ParquetWriter;
-use serde::{Deserialize, Serialize};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 // TODO I would like to make this a default trait method
@@ -69,11 +64,11 @@ pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, sch
 
 pub fn write_dataframe_to_parquet(df: &mut DataFrame, filename: &Path) {
     // Write the Parquet File
-    let mut file = std::fs::File::create(&filename).expect("Unable to create parquet file");
+    let mut file = std::fs::File::create(filename).expect("Unable to create parquet file");
     ParquetWriter::new(&mut file)
         .finish(df)
         .expect("Unable to write parquet file");
-    let mut file = std::fs::File::create(&filename).expect("Unable to create parquet file");
+    let mut file = std::fs::File::create(filename).expect("Unable to create parquet file");
 
     ParquetWriter::new(&mut file)
         .finish(df)

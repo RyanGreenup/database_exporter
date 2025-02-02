@@ -8,7 +8,7 @@ mod helpers;
 mod postgres;
 use clap::Parser;
 use cli::Cli;
-use config::{Config, SQLEngineConfig};
+use config::Config;
 use sql_server::{Database, DatabaseType};
 use std::process;
 

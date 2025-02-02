@@ -147,7 +147,7 @@ trait InternalDatabaseOperations {
         let queries = &[CXQuery::from(&query)];
 
         // Get a Destination using Arrow
-        get_arrow(&self.get_connection(), None, queries).expect("Run Failed")
+        get_arrow(self.get_connection(), None, queries).expect("Run Failed")
     }
 
     /// Get the tables from the database
@@ -266,9 +266,8 @@ impl Database {
 
         // Get a Dataframe (NOTE must have same polars_core version in connectorx
         // and polars, look at `cargo tree | grep polars-core`)
-        let df = destination.polars().expect("Unable to get Dataframe");
 
-        return df;
+        destination.polars().expect("Unable to get Dataframe")
     }
 
     /// Prints the names of all tables to the console.
@@ -318,7 +317,7 @@ impl Database {
 
         // Write to files
         for tp in &parquet_paths {
-            self.write_to_parquet(&tp, limit);
+            self.write_to_parquet(tp, limit);
         }
 
         // Write to duckdb

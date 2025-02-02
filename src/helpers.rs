@@ -1,7 +1,5 @@
 use std::path::PathBuf;
 
-use polars::frame::DataFrame;
-
 /// Represents a parquet file associated with a specific database table.
 pub struct TableParquet {
     pub file_path: PathBuf,
@@ -28,4 +26,3 @@ impl TableParquet {
         }
     }
 }
-
