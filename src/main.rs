@@ -17,7 +17,13 @@ fn main() {
     let config_path = cli.get_config_path();
 
     match SQLEngineConfig::load(&config_path) {
-        Ok(configs) => run(configs, &cli.get_export_directory(), cli.include_duckdb, &cli.duckdb_file_name),
+        Ok(configs) => run(
+            configs, 
+            &cli.get_export_directory(), 
+            cli.database.include_duckdb, 
+            &cli.database.duckdb_file_name,
+            cli.database.row_limit,
+        ),
         Err(e) => {
             eprintln!("{}", e);
             process::exit(1);
@@ -25,7 +31,13 @@ fn main() {
     }
 }
 
-fn run(configs: HashMap<String, SQLEngineConfig>, export_directory: &Path, include_duckdb: bool, database_name: &str) {
+fn run(
+    configs: HashMap<String, SQLEngineConfig>, 
+    export_directory: &Path, 
+    include_duckdb: bool, 
+    database_name: &str,
+    row_limit: Option<u32>,
+) {
     for (name, config) in configs {
         println!("Processing database: {}", name);
 
@@ -35,7 +47,7 @@ fn run(configs: HashMap<String, SQLEngineConfig>, export_directory: &Path, inclu
         // TODO this should be a toml parameter or a CLI Parameter
         // TODO the config MUST explain to the user if the key is ambiguous
 
-        match db.export_dataframes(None, export_directory, include_duckdb, &database_name, &name) {
+        match db.export_dataframes(row_limit, export_directory, include_duckdb, database_name, &name) {
             Ok(_) => {}
             Err(e) => eprintln!("{e}"),
         }

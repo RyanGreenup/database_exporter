@@ -37,6 +37,10 @@ pub struct DatabaseOptions {
     /// Database Name for duckdb export, this will be underneath the export directory
     #[arg(default_value_t = String::from("database.duckdb"), short, long)]
     pub duckdb_file_name: String,
+
+    /// Limit the number of rows exported per table
+    #[arg(long)]
+    pub row_limit: Option<u32>,
 }
 
 impl Cli {
