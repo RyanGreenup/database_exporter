@@ -1,5 +1,7 @@
 - [X] Don't Panic
 - Specify export location
+    - "./data/extracted/parquets"
+    - Include duckdb?
 - Upload to Google Drive
 - Upload a sheet to Google Drive
 - Config should return hashmap

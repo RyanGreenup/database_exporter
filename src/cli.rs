@@ -8,6 +8,10 @@ pub struct Cli {
     /// Path to config file
     #[clap(short, long)]
     config: Option<PathBuf>,
+
+    /// Export Directory
+    #[arg(default_value_t = String::from("./data/extracted/parquets"), short, long)]
+    export_directory: String,
 }
 
 impl Cli {
@@ -25,5 +29,14 @@ impl Cli {
         }
 
         panic!("Could not determine config file location");
+    }
+
+    pub fn get_export_directory(&self) -> PathBuf {
+        let path = PathBuf::from(self.export_directory.clone());
+
+        std::fs::create_dir_all(&path)
+            .unwrap_or_else(|e| panic!("Unable to create directory: {:?}\n{e}", &path));
+
+        return path;
     }
 }

@@ -9,6 +9,7 @@ use cli::Cli;
 use config::SQLEngineConfig;
 use database::Database;
 use std::collections::HashMap;
+use std::path::Path;
 use std::process;
 
 fn main() {
@@ -16,7 +17,7 @@ fn main() {
     let config_path = cli.get_config_path();
 
     match SQLEngineConfig::load(&config_path) {
-        Ok(configs) => run(configs),
+        Ok(configs) => run(configs, &cli.get_export_directory()),
         Err(e) => {
             eprintln!("{}", e);
             process::exit(1);
@@ -24,7 +25,7 @@ fn main() {
     }
 }
 
-fn run(configs: HashMap<String, SQLEngineConfig>) {
+fn run(configs: HashMap<String, SQLEngineConfig>, export_directory: &Path) {
     for (name, config) in configs {
         println!("Processing database: {}", name);
 
@@ -32,7 +33,7 @@ fn run(configs: HashMap<String, SQLEngineConfig>) {
 
         // Export all dataframes
         // TODO this should be a toml parameter or a CLI Parameter
-        match db.export_dataframes(None) {
+        match db.export_dataframes(None, export_directory) {
             Ok(_) => {}
             Err(e) => eprintln!("{e}"),
         }

@@ -8,7 +8,7 @@ use connectorx::prelude::*;
 use polars::error::PolarsError;
 use polars::frame::DataFrame;
 use polars::prelude::ParquetWriter;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use types::DatabaseType;
 
 #[derive(Debug)]
@@ -303,12 +303,12 @@ impl Database {
     /// # Arguments
     ///
     /// * `limit` - An optional limit on the number of rows to retrieve from each table.
-    pub fn export_dataframes(&self, limit: Option<u32>) -> Result<(), DatabaseError> {
+    pub fn export_dataframes(&self, limit: Option<u32>, export_directory: &Path) -> Result<(), DatabaseError> {
         // Get paths to parquet files
         let parquet_paths: Vec<TableParquet> = self
             .get_tables()?
             .into_iter()
-            .map(|table_name| TableParquet::new(&table_name))
+            .map(|table_name| TableParquet::new(&table_name, export_directory))
             .collect();
 
         let mut writable_parquet_paths: Vec<TableParquet> = Vec::with_capacity(parquet_paths.len());
