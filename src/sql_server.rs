@@ -82,8 +82,10 @@ trait InternalDatabaseOperations {
         get_arrow(&self.get_connection(), None, queries).expect("Run Failed")
     }
 
+    // TODO don't panic, just drop and print to STDERR
+    // This is pretty unexpected behaviour
     /// Returns tables as optional values
-    fn get_optional_tables(&self) -> Vec<Option<String>> {
+    fn get_optional_tables(&self) -> Vec<String> {
         // Some Queries
         // let queries = &[CXQuery::from("SELECT * FROM Track")];
 
@@ -101,18 +103,20 @@ trait InternalDatabaseOperations {
         // and polars, look at `cargo tree | grep polars-core`)
         let data = destination.polars().expect("Unable to get Dataframe");
 
-        // Print the items
         // TODO we need a struct or Enum
         let col_of_strings = data
             .column(&colname)
             .unwrap_or_else(|e| {
-                panic!("Unable to extract heading {colname} from query:\n{query}\n{e}")
+                panic!("Unable to extract column: {colname} from query:\n{query}\n{e}")
             })
             .try_str()
             .unwrap_or_else(|| {
                 panic!("Unable to parse column {colname} as strings from query:\n{query}")
             });
 
+        // Rewrite this as a filter_map but keep the eprintln so that the function does't return
+        // Optional<string> and instead returns <String>
+        // AI!
         let vec_of_table_names: Vec<Option<String>> = col_of_strings
             .iter()
             .map(|item| {
@@ -126,6 +130,7 @@ trait InternalDatabaseOperations {
                 }
             })
             .collect();
+
 
         vec_of_table_names
     }
