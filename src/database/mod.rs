@@ -1,5 +1,6 @@
 pub mod types;
 
+use crate::cli::DuckDBExportOptions;
 use crate::file_helpers::write_parquet_files_to_duckdb_table;
 use crate::helpers::TableParquet;
 use crate::{config::SQLEngineConfig, file_helpers::DuckDBError};
@@ -320,7 +321,7 @@ impl Database {
         &self,
         limit: Option<u32>,
         export_directory: &Path,
-        duckdb_options: Option<DuckDBExportOptions>,
+        duckdb_options: Option<&DuckDBExportOptions>,
         schema: &str,
     ) -> Result<(), DatabaseError> {
         // Get paths to parquet files
@@ -345,7 +346,7 @@ impl Database {
             write_parquet_files_to_duckdb_table(
                 writable_parquet_paths,
                 schema,
-                &export_directory.join(opts.file_name),
+                &export_directory.join(opts.file_name.clone()),
             )?;
         }
         Ok(())

@@ -28,7 +28,7 @@ fn main() {
             run(
                 configs,
                 &cli.get_export_directory(),
-                duckdb_options,
+                duckdb_options.as_ref(),
                 cli.row_limit,
             )
         }
@@ -42,7 +42,7 @@ fn main() {
 fn run(
     configs: HashMap<String, SQLEngineConfig>,
     export_directory: &Path,
-    duckdb_options: Option<DuckDBExportOptions>,
+    duckdb_options: Option<&DuckDBExportOptions>,
     row_limit: Option<u32>,
 ) {
     for (name, config) in configs {
@@ -53,7 +53,7 @@ fn run(
         match db.export_dataframes(
             row_limit,
             export_directory,
-            duckdb_options.as_ref(),
+            duckdb_options,
             &name,
         ) {
             Ok(_) => {}
