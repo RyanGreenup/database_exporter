@@ -195,6 +195,7 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
         write_dataframe_to_parquet(&mut df, filename);
     }
 
+    // Write a docstring AI!
     fn write_table_to_parquet_path(
         &self,
         table: &str,
