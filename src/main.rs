@@ -11,13 +11,14 @@ use config::SQLEngineConfig;
 use database::types::DatabaseType;
 use database::Database;
 use std::process;
+use std::collections::HashMap;
 
 fn main() {
     let cli = Cli::parse();
     let config_path = cli.get_config_path();
 
     match SQLEngineConfig::load(&config_path) {
-        Ok(config) => run(config.sql_server),
+        Ok(configs) => run(configs),
         Err(e) => {
             eprintln!("{}", e);
             process::exit(1);
@@ -25,16 +26,14 @@ fn main() {
     }
 }
 
-fn run(sql_config: config::SQLEngineConfig) {
-    let ms_db = Database::new(sql_config, DatabaseType::SQLServer);
-
-    // Print all the tables
-    // ms_db.print_tables()
-
-    // print all dataframes
-    // ms_db.print_dataframes();
-
-    // Export all dataframes (1 row)
-    // TODO this should be a toml parameter or a CLI Parameter
-    ms_db.export_dataframes(None);
+fn run(configs: HashMap<String, SQLEngineConfig>) {
+    for (name, config) in configs {
+        println!("Processing database: {}", name);
+        
+        let db = Database::new(config.clone(), config.database_type);
+        
+        // Export all dataframes
+        // TODO this should be a toml parameter or a CLI Parameter
+        db.export_dataframes(None);
+    }
 }
