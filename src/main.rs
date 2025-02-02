@@ -17,13 +17,20 @@ fn main() {
     let config_path = cli.get_config_path();
 
     match SQLEngineConfig::load(&config_path) {
-        Ok(configs) => run(
-            configs,
-            &cli.get_export_directory(),
-            cli.database.include_duckdb,
-            &cli.database.duckdb_file_name,
-            cli.database.row_limit,
-        ),
+        Ok(configs) => {
+            let duckdb_options = if cli.database.include_duckdb {
+                Some(DuckDBExportOptions::from(&cli.database))
+            } else {
+                None
+            };
+
+            run(
+                configs,
+                &cli.get_export_directory(),
+                duckdb_options,
+                cli.database.row_limit,
+            )
+        }
         Err(e) => {
             eprintln!("{}", e);
             process::exit(1);
@@ -34,7 +41,7 @@ fn main() {
 fn run(
     configs: HashMap<String, SQLEngineConfig>,
     export_directory: &Path,
-    duckdb_options: Option<DatabaseOptions>,
+    duckdb_options: Option<DuckDBExportOptions>,
     row_limit: Option<u32>,
 ) {
     for (name, config) in configs {
@@ -42,11 +49,13 @@ fn run(
 
         let db = Database::new(config.clone(), config.database_type);
 
-        // Export all dataframes
-        // TODO this should be a toml parameter or a CLI Parameter
-        // TODO the config MUST explain to the user if the key is ambiguous
-
-        match db.export_dataframes(row_limit, export_directory, include_duckdb, database_name, &name) {
+        match db.export_dataframes(
+            row_limit,
+            export_directory,
+            duckdb_options.is_some(),
+            &duckdb_options.as_ref().map_or("database.duckdb".to_string(), |o| o.file_name),
+            &name,
+        ) {
             Ok(_) => {}
             Err(e) => eprintln!("{e}"),
         }

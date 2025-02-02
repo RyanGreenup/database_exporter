@@ -43,6 +43,19 @@ pub struct DatabaseOptions {
     pub row_limit: Option<u32>,
 }
 
+#[derive(Debug, Clone)]
+pub struct DuckDBExportOptions {
+    pub file_name: String,
+}
+
+impl From<&DatabaseOptions> for DuckDBExportOptions {
+    fn from(opts: &DatabaseOptions) -> Self {
+        Self {
+            file_name: opts.duckdb_file_name.clone(),
+        }
+    }
+}
+
 impl Cli {
     pub fn get_config_path(&self) -> PathBuf {
         if let Some(path) = &self.config {
