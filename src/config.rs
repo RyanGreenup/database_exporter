@@ -29,12 +29,12 @@ impl Config {
         if !path.exists() {
             let default_config = Config {
                 database: SQLEngineConfig {
-                    database_type: DatabaseType::SqlServer,
-                    username: "".to_string(),
-                    password: "".to_string(),
-                    database: "".to_string(),
-                    host: "".to_string(),
-                    port: "".to_string(),
+                    database_type: DatabaseType::Postgres,
+                    username: "postgres".to_string(),
+                    password: "postgres".to_string(),
+                    database: "chinook".to_string(),
+                    host: "localhost".to_string(),
+                    port: "5432".to_string(),
                 },
             };
 
