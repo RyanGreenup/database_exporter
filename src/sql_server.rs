@@ -253,7 +253,11 @@ impl DatabaseOperations for SQLServer {
         }
     }
 
-    // Write a docstring AI!
+    /// Returns the query to retrieve all table names from the database.
+    ///
+    /// # Returns
+    ///
+    /// A `GetTablesQuery` struct containing the SQL query and the column name for table names.
     fn get_query_all_tables() -> GetTablesQuery {
         let column_name = "table_name".into();
         let query = format!(
