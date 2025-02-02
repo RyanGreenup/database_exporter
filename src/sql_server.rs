@@ -93,10 +93,9 @@ impl DatabaseType {
 }
 
 #[derive(Debug)]
-#[allow(dead_code)]
-pub struct SQLServer {
+pub struct Database {
     pub config: SQLEngineConfig,
-    pub uri_string: String,
+    uri_string: String,
     source_conn: SourceConn,
     db_type: DatabaseType,
 }
@@ -340,26 +339,25 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     }
 }
 
-impl InternalDatabaseOperations for SQLServer {
+impl InternalDatabaseOperations for Database {
     fn get_connection(&self) -> &connectorx::source_router::SourceConn {
         &self.source_conn
     }
 
-    fn get_table_query(table: &str, limit: Option<u32>) -> String {
-        DatabaseType::SQLServer.get_rows_query(table, limit)
+    fn get_table_query(&self, table: &str, limit: Option<u32>) -> String {
+        self.db_type.get_rows_query(table, limit)
     }
 
-    fn get_query_all_tables() -> GetTablesQuery {
-        DatabaseType::SQLServer.get_tables_query()
+    fn get_query_all_tables(&self) -> GetTablesQuery {
+        self.db_type.get_tables_query()
     }
 }
 
-impl PublicDatabaseOperations for SQLServer {
-    fn new(config: SQLEngineConfig) -> Self {
-        let db_type = DatabaseType::SQLServer;
+impl PublicDatabaseOperations for Database {
+    fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Self {
         let uri = db_type.create_connection_string(&config);
         let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
-
+        
         Self {
             config,
             uri_string: uri,
