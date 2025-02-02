@@ -1,4 +1,5 @@
 use crate::config::SQLEngineConfig;
+use crate::file_helpers::{write_dataframe_to_parquet, write_parquet_files_to_duckdb_table};
 use crate::helpers::TableParquet;
 use connectorx::prelude::*;
 use duckdb::{params, Connection, Result};
@@ -137,30 +138,44 @@ pub trait DatabaseOperations {
     }
 
     // File Operations
+    fn write_to_parquet(&self, parquet_path: &TableParquet, limit: Option<u32>) {
+        // Get the dataframe for the table
+        let mut df = self.get_dataframe(&parquet_path.table_name, limit);
 
-    // TODO this should not panic so it can be looped
+        // Get the standardised filepath
+        let filename = &parquet_path.file_path;
 
-    // Consider returning the path or taking the TableParquet as input
-    fn write_to_parquet(&self, table: &str, limit: Option<u32>) {
-        // Get the dataframe
-        let mut df = self.get_dataframe(table, limit);
+        // Write the dataframe to parquet
+        write_dataframe_to_parquet(&mut df, filename);
+    }
 
-        // Create the parquet path
-        let parquet_path = TableParquet::new(table);
-        let filename = parquet_path.file_path;
+    fn write_table_to_parquet_path(&self, table: &str, filename: &Path) -> Result<(), > {
+        // Create all directories
+        std::fs::create_dir_all(filename)?;
 
-        // Write the Parquet File
-        let mut file = std::fs::File::create(&filename).expect("Unable to create parquet file");
-        ParquetWriter::new(&mut file)
-            .finish(&mut df)
-            .expect("Unable to write parquet file");
-        let mut file = std::fs::File::create(&filename).expect("Unable to create parquet file");
+        Ok(())
+    }
 
-        ParquetWriter::new(&mut file)
-            .finish(&mut df)
-            .expect("Unable to write parquet file");
+    fn export_dataframes(&self, limit: Option<u32>) {
+        // Get paths to parquet files
+        let parquet_paths: Vec<TableParquet> = self
+            .get_optional_tables()
+            // Consume the original vector
+            .into_iter()
+            // filter_map automatically drops None
+            .filter_map(|maybe_table_name| maybe_table_name)
+            // Cast to TableParquet which generates a file path
+            .map(|table_name| TableParquet::new(&table_name))
+            // Collect into an iterator
+            .collect();
 
-        println!("Export Successful for: {:?}!", &filename);
+        // Write to files
+        for tp in &parquet_paths {
+            self.write_to_parquet(&tp, limit);
+        }
+
+        // Write to duckdb
+        write_parquet_files_to_duckdb_table(parquet_paths, None);
     }
 }
 
@@ -207,85 +222,5 @@ impl DatabaseOperations for SQLServer {
         );
 
         GetTablesQuery { query, column_name }
-    }
-}
-
-pub trait ExportOperations {
-    fn write_to_parquet(&self, table: &str, limit: Option<u32>);
-    fn write_parquet_file_to_duckdb_table(&self, parquet_path: &TableParquet, schema: Option<&str>);
-}
-
-impl SQLServer {
-    pub fn export_dataframes(&self, limit: Option<u32>) {
-        let mut parquet_paths = vec![];
-        for maybe_table in self.get_optional_tables() {
-            if let Some(table) = maybe_table {
-                self.write_to_parquet(&table, limit);
-                // TODO set the schema based on the database name
-                // Use a variable in the config, e.g. database_name
-                let tp = TableParquet::new(&table);
-                // self.write_parquet_file_to_duckdb_table(&tp, None);
-                parquet_paths.push(&tp)
-            }
-        }
-
-        self.write_parquet_file_to_duckdb_table(parquet_paths, None);
-    }
-
-    // TODO I would like to make this a default trait method
-    // But I can't because it requires the duckdb_conn
-    // Figure this out, maybe make it more general?
-
-    // TODO Export to DuckDB
-    // Here we just load the parquets
-    // connectorx can't clone in memory which would
-    // hit the database again and load the network
-    // parquet is memory mapped so it's probably better to do it this way
-    // To save memory we should drop the dataframe before getting here
-    pub fn write_parquet_file_to_duckdb_table(
-        &self,
-        parquet_paths: impl Iterator<Item = &TableParquet>,
-        schema: Option<&str>,
-    ) {
-        // Use main by default
-        let schema = schema.unwrap_or("main");
-
-        for parquet_path in parquet_paths {
-            // Change into the directory
-            match parquet_path.file_path.to_str() {
-                Some(path_str) => {
-                    // Read the parquet as a file
-                    // TODO
-                    // Is this expensive to open?
-                    // Should we load them all in at once to simplify locking operations
-                    // Yeah let's collect the paths of duckdb files that need to be loaded in
-                    // then we can open once and immediately close
-
-                    Connection::open(PathBuf::from("./data.duckdb"))
-                        .expect("Unable to create duckdb file")
-                        .execute(
-                            // https://duckdb.org/docs/data/parquet/overview.html
-                            &format!(
-                                "CREATE OR REPLACE TABLE {schema}.{} AS SELECT * FROM '{}';",
-                                &parquet_path.table_name,
-                                &path_str.to_string()
-                            ),
-                            [],
-                        )
-                        .unwrap_or_else(|e| {
-                            panic!(
-                                "
-                    Unable to read table {} from path {}\n{}
-                    ",
-                                parquet_path.table_name, path_str, e
-                            )
-                        });
-                }
-                None => eprintln!(
-                    "Unable to get path string from {:?}",
-                    parquet_path.file_path
-                ),
-            };
-        }
     }
 }
