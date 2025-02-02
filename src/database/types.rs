@@ -11,6 +11,7 @@ pub enum DatabaseType {
     SQLServer,
     Postgres,
     MySQL,
+    SQLite,
 }
 impl DatabaseType {
     /// Creates a connection string for the database type
@@ -41,6 +42,9 @@ impl DatabaseType {
                     "mysql://{}:{}@{}:{}/{}",
                     config.username, config.password, config.host, config.port, config.database
                 )
+            }
+            DatabaseType::SQLite => {
+                format!("sqlite://{}", config.database) // database field will contain the full path
             }
         }
     }
@@ -76,6 +80,14 @@ impl DatabaseType {
                     .to_string(),
                 column_name: "table_name".to_string(),
             },
+            DatabaseType::SQLite => GetTablesQuery {
+                query: r#"
+                    SELECT name as table_name 
+                    FROM sqlite_master 
+                    WHERE type='table' AND name NOT LIKE 'sqlite_%'"#
+                    .to_string(),
+                column_name: "table_name".to_string(),
+            },
         }
     }
 
@@ -91,6 +103,10 @@ impl DatabaseType {
                 None => format!("SELECT * FROM {}", table),
             },
             DatabaseType::MySQL => match limit {
+                Some(n) => format!("SELECT * FROM {} LIMIT {}", table, n),
+                None => format!("SELECT * FROM {}", table),
+            },
+            DatabaseType::SQLite => match limit {
                 Some(n) => format!("SELECT * FROM {} LIMIT {}", table, n),
                 None => format!("SELECT * FROM {}", table),
             },
