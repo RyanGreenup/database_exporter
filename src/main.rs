@@ -18,9 +18,9 @@ fn main() {
 
     match SQLEngineConfig::load(&config_path) {
         Ok(configs) => run(
-            configs, 
-            &cli.get_export_directory(), 
-            cli.database.include_duckdb, 
+            configs,
+            &cli.get_export_directory(),
+            cli.database.include_duckdb,
             &cli.database.duckdb_file_name,
             cli.database.row_limit,
         ),
@@ -32,10 +32,9 @@ fn main() {
 }
 
 fn run(
-    configs: HashMap<String, SQLEngineConfig>, 
-    export_directory: &Path, 
-    include_duckdb: bool, 
-    database_name: &str,
+    configs: HashMap<String, SQLEngineConfig>,
+    export_directory: &Path,
+    duckdb_options: Option<DatabaseOptions>,
     row_limit: Option<u32>,
 ) {
     for (name, config) in configs {
