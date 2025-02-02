@@ -4,14 +4,13 @@ mod database;
 // TODO these should be merged
 mod file_helpers;
 mod helpers;
-mod postgres;
 use clap::Parser;
 use cli::Cli;
 use config::SQLEngineConfig;
 use database::types::DatabaseType;
 use database::Database;
-use std::process;
 use std::collections::HashMap;
+use std::process;
 
 fn main() {
     let cli = Cli::parse();

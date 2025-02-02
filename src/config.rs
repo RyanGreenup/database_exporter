@@ -1,8 +1,8 @@
+use crate::database::types::DatabaseType;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use crate::database::types::DatabaseType;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SQLEngineConfig {

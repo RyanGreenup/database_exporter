@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::config::SQLEngineConfig;
 use crate::database::GetTablesQuery;
+use serde::{Deserialize, Serialize};
 
 /// Represents different types of SQL databases and their specific query formats
 /// Eventually this will be replaced with <connectorx::source_router::SourceType>
