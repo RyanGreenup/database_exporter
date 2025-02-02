@@ -5,3 +5,4 @@
 - Run should act on all keys
     - don't panic
 - Pass in desired output path
+- may as well add maria and sqlite
