@@ -37,7 +37,36 @@ impl std::error::Error for DuckDBError {}
 
 
 
-// Write a docstring AI!
+/// Writes multiple Parquet files to tables in a DuckDB database.
+///
+/// # Arguments
+///
+/// * `parquet_paths` - Vector of TableParquet structs containing file paths and table names
+/// * `schema` - The schema name to use in DuckDB (will be sanitized)
+/// * `file_location` - Path where the DuckDB database file should be created
+///
+/// # Returns
+///
+/// * `Ok(())` if all operations completed successfully
+/// * `Err(DuckDBError)` if there were any errors during the process
+///
+/// # Notes
+///
+/// - Removes any existing database file at the specified location
+/// - Creates the schema if it doesn't exist
+/// - Creates or replaces tables for each Parquet file
+/// - Tables will be named according to the TableParquet struct names
+///
+/// # Examples
+///
+/// ```
+/// use std::path::Path;
+/// let parquets = vec![
+///     TableParquet::new("users", Path::new("./data/users.parquet")),
+///     TableParquet::new("orders", Path::new("./data/orders.parquet"))
+/// ];
+/// write_parquet_files_to_duckdb_table(parquets, "myapp", Path::new("./db.duckdb"))?;
+/// ```
 pub fn write_parquet_files_to_duckdb_table(
     parquet_paths: Vec<TableParquet>,
     schema: &str,
