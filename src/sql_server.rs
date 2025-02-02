@@ -116,6 +116,7 @@ trait InternalDatabaseOperations {
     }
 }
 
+// Write a docstring AI!
 pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     /// Creates a new instance of SQLServer with the provided configuration.
     ///
@@ -223,7 +224,6 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
 
         Ok(())
     }
-
 
     /// Exports DataFrames for all tables to Parquet files and loads them into DuckDB.
     ///
