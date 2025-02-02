@@ -14,6 +14,8 @@ pub struct GetTablesQuery {
 }
 
 /// Represents different types of SQL databases and their specific query formats
+/// Eventually this will be replaced with <connectorx::source_router::SourceType>
+/// For now not all databases have been implemented
 #[derive(Debug)]
 pub enum DatabaseType {
     SQLServer,
@@ -22,13 +24,12 @@ pub enum DatabaseType {
 
 impl DatabaseType {
     /// Creates a connection string for the database type
-    pub fn create_connection_string(
-        &self,
-        config: &SQLEngineConfig,
-    ) -> String {
+    /// See connectorx docs for guidance on docstrings:
+    ///
+    /// * [mssql](https://sfu-db.github.io/connector-x/databases/mssql.html)
+    /// * [postgresql](https://sfu-db.github.io/connector-x/databases/postgres.html)
+    pub fn create_connection_string(&self, config: &SQLEngineConfig) -> String {
         match self {
-            /// See connectorx docs for the mssql docstring
-            /// https://sfu-db.github.io/connector-x/databases/mssql.html
             DatabaseType::SQLServer => {
                 let mut uri = format!(
                     "mssql://{}:{}@{}:{}/{}",
@@ -89,8 +90,8 @@ impl DatabaseType {
 
 #[derive(Debug)]
 pub struct Database {
-    pub config: SQLEngineConfig,
-    uri_string: String,
+    pub config: SQLEngineConfig,  // TODO Dead but good for debugging
+    uri_string: String,           // TODO Dead Code but good for debugging
     source_conn: SourceConn,
     db_type: DatabaseType,
 }
@@ -155,7 +156,7 @@ trait InternalDatabaseOperations {
         // let queries = &[CXQuery::from("SELECT * FROM Track")];
 
         // Get the query for all tables
-        let all_tables_query = Self::get_query_all_tables();
+        let all_tables_query = self.get_query_all_tables();
         let query = all_tables_query.query;
         let colname = all_tables_query.column_name;
 
@@ -224,6 +225,7 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     /// # Arguments
     ///
     /// * `limit` - An optional limit on the number of rows to retrieve from each table.
+    #[allow(dead_code)]
     fn print_all_tables_as_dataframes(&self, limit: Option<u32>) {
         for table in self.get_tables() {
             let df = self.get_dataframe(&table, limit);
@@ -253,6 +255,7 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     }
 
     /// Prints the names of all tables to the console.
+    #[allow(dead_code)]
     fn print_tables(&self) {
         for table in self.get_tables() {
             println!("{table}");
@@ -291,6 +294,7 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     /// # Returns
     ///
     /// An `io::Result<()>` indicating success or failure.
+    #[allow(dead_code)]
     fn write_table_to_parquet_path(
         &self,
         table: &str,
@@ -353,11 +357,11 @@ impl PublicDatabaseOperations for Database {
     fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Self {
         let uri = db_type.create_connection_string(&config);
         let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
-        
+
         Self {
             config,
             uri_string: uri,
-            source_conn, 
+            source_conn,
             db_type,
         }
     }
