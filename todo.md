@@ -1,4 +1,5 @@
-- Don't Panic
+- [X] Don't Panic
+- Specify export location
 - Upload to Google Drive
 - Upload a sheet to Google Drive
 - Config should return hashmap

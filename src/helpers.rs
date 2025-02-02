@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 /// Represents a parquet file associated with a specific database table.
+#[derive(Clone)]
 pub struct TableParquet {
     pub file_path: PathBuf,
     pub table_name: String,

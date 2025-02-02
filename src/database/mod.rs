@@ -293,7 +293,7 @@ impl Database {
         let filename = &parquet_path.file_path;
 
         // Write the dataframe to parquet
-        write_dataframe_to_parquet(&mut df, filename);
+        write_dataframe_to_parquet(&mut df, filename)?;
 
         Ok(())
     }
@@ -311,16 +311,18 @@ impl Database {
             .map(|table_name| TableParquet::new(&table_name))
             .collect();
 
+        let mut writable_parquet_paths: Vec<TableParquet> = Vec::with_capacity(parquet_paths.len());
+
         // Write to files
         for tp in &parquet_paths {
             match self.write_to_parquet(tp, limit) {
-                Ok(_) => {}
+                Ok(_) => writable_parquet_paths.push(tp.clone()),
                 Err(e) => eprintln!("{e}"),
             }
         }
 
         // Write to duckdb
-        write_parquet_files_to_duckdb_table(parquet_paths, None);
+        write_parquet_files_to_duckdb_table(writable_parquet_paths, None);
         Ok(())
     }
 
