@@ -8,8 +8,8 @@ use polars::io::parquet;
 use polars::prelude::ParquetWriter;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::{Path, PathBuf};
 use std::io;
+use std::path::{Path, PathBuf};
 
 pub struct GetTablesQuery {
     /// The query that will return all tables for the given database
@@ -26,12 +26,6 @@ pub struct SQLServer {
     source_conn: SourceConn,
     // TODO must drop this automagically
     // duckdb_conn: Connection,
-}
-
-pub trait HasConnection {
-    type SourceConn;
-
-    fn connection(&self) -> &Self::SourceConn;
 }
 
 pub trait DatabaseOperations {
@@ -56,6 +50,8 @@ pub trait DatabaseOperations {
         }
     }
 
+    /// Retrieves the database table as in-memory representation
+    /// which can later be transformed into other representations
     fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination {
         // Build the query
         let query = match limit {
@@ -150,9 +146,20 @@ pub trait DatabaseOperations {
         write_dataframe_to_parquet(&mut df, filename);
     }
 
-    fn write_table_to_parquet_path(&self, table: &str, filename: &Path) -> io::Result<()> {
+    fn write_table_to_parquet_path(
+        &self,
+        table: &str,
+        filename: &Path,
+        limit: Option<u32>,
+    ) -> io::Result<()> {
         // Create all directories
         std::fs::create_dir_all(filename)?;
+
+        // Get the dataframe
+        let mut df = self.get_dataframe(table, limit);
+
+        // Write the dataframe to parquet
+        write_dataframe_to_parquet(&mut df, filename);
 
         Ok(())
     }
