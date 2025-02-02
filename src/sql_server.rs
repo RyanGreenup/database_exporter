@@ -206,7 +206,7 @@ trait InternalDatabaseOperations {
 /// for common tasks such as printing tables, retrieving dataframes, writing to Parquet,
 /// and exporting dataframes to DuckDB.
 pub trait PublicDatabaseOperations: InternalDatabaseOperations {
-    /// Creates a new instance of SQLServer with the provided configuration.
+    /// Creates a new instance of a database connection with the provided configuration.
     ///
     /// # Arguments
     ///
@@ -215,10 +215,18 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     ///
     /// # Returns
     ///
-    /// A new instance of SQLServer.
-    fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Self
-    where
-        Self: Sized;
+    /// A new instance of the implementing type.
+    fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Database {
+        let uri = db_type.create_connection_string(&config);
+        let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
+
+        Database {
+            config,
+            uri_string: uri,
+            source_conn,
+            db_type,
+        }
+    }
 
     /// Prints all tables as DataFrames to the console.
     ///
@@ -353,16 +361,4 @@ impl InternalDatabaseOperations for Database {
     }
 }
 
-impl PublicDatabaseOperations for Database {
-    fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Self {
-        let uri = db_type.create_connection_string(&config);
-        let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
-
-        Self {
-            config,
-            uri_string: uri,
-            source_conn,
-            db_type,
-        }
-    }
-}
+impl PublicDatabaseOperations for Database {}
