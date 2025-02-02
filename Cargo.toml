@@ -6,7 +6,7 @@ edition = "2021" # Stable
 
 [dependencies]
 polars-core = "0.45.1"
-connectorx = { version = "0.4.1", features = ["arrow", "dst_arrow", "dst_polars", "polars", "src_mssql"] }
+connectorx = { version = "0.4.1", features = ["arrow", "dst_arrow", "dst_polars", "polars", "src_mssql", "src_postgres"] }
 polars = { version = "0.45.1", features = ["parquet"] }
 clap = { version = "4.5.27", features = ["derive"] }
 toml = "0.8.19"
