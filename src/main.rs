@@ -11,6 +11,7 @@ use database::Database;
 use std::collections::HashMap;
 use std::path::Path;
 use std::process;
+use crate::cli::DuckDBExportOptions;
 
 fn main() {
     let cli = Cli::parse();
