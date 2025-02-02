@@ -63,6 +63,7 @@ pub fn write_parquet_files_to_duckdb_table(
     parquet_paths: Vec<TableParquet>,
     schema: &str,
     file_location: &Path,
+    separator: Option<&str>,
 ) -> Result<(), DuckDBError> {
     // Don't remove the File as this is called for each item in the config
     // This replaces the table anyway, SQLite only writes as needed
@@ -72,6 +73,9 @@ pub fn write_parquet_files_to_duckdb_table(
 
     // Sanitize the Schema
     let schema = &sanitize_schema(schema);
+
+    // Choose the separator (i.e. Schema or __ etc.)
+    let sep = separator.unwrap_or(".");
 
     // Open a connection
     // NOTE map to a connection error as PathBuf probably fixed the path
@@ -88,7 +92,7 @@ pub fn write_parquet_files_to_duckdb_table(
                 let query = &format!(
                     // Evaluate whether we want schema or simply __
                     // PITA in the CLI to use schema
-                    "CREATE OR REPLACE TABLE {schema}.{} AS SELECT * FROM '{}';",
+                    "CREATE OR REPLACE TABLE {schema}{sep}{} AS SELECT * FROM '{}';",
                     &parquet_path.table_name,
                     &path_str.to_string()
                 );

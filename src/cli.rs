@@ -48,17 +48,23 @@ pub struct DatabaseOptions {
     #[arg(default_value_t = String::from("database.duckdb"), short, long)]
     pub duckdb_file_name: String,
 
+    /// Custom separator to use instead of schemas in database
+    #[arg(long)]
+    separator: Option<String>
+
 }
 
 #[derive(Debug, Clone)]
 pub struct DuckDBExportOptions {
     pub file_name: String,
+    pub separator: Option<String>,
 }
 
 impl From<&DatabaseOptions> for DuckDBExportOptions {
     fn from(opts: &DatabaseOptions) -> Self {
         Self {
             file_name: opts.duckdb_file_name.clone(),
+            separator: opts.separator.clone(),
         }
     }
 }

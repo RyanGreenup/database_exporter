@@ -2,18 +2,21 @@
 - [ ] Specify export location
     - [X]  "./data/extracted/parquets"
     - [ ] Include duckdb
-        - [ ] We'll need a struct for the db export info
-- [ ] Docstrings
+        - [X] We'll need a struct for the db export info
+        - [ ] Should this struct really include an option for duckdb or should the presence be enough?
 - [ ] Configure Schema in database output
     - [X] Add to function
-    - [ ] Allow swapping for `__` at cli
-- [ ] Docs
+    - [X] Allow swapping for `__` or anything at cli
 - [X] Run should act on all keys
     - [X] don't panic
-- [ ] Watch
-- Upload to Google Drive
-- Upload a sheet to Google Drive
-- Config should return hashmap
-- Pass in desired output path
-- may as well add maria and sqlite
-- Watch logic
+- [X] Service wait
+- [X] Config should return hashmap
+- [X] Pass in desired output path
+- [X] may as well add maria and sqlite
+- [X] Docstrings
+- [ ] Custom Attendance Sheet Upload
+    - Maybe this should be a separate program rather than a behemoth?
+- [ ] Upload to Google Drive
+- [ ] Upload a sheet to Google Drive
+- [ ] Docs
+- [  ] Tests
