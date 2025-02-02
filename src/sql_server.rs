@@ -114,12 +114,9 @@ trait InternalDatabaseOperations {
                 panic!("Unable to parse column {colname} as strings from query:\n{query}")
             });
 
-        // Rewrite this as a filter_map but keep the eprintln so that the function does't return
-        // Optional<string> and instead returns <String>
-        // AI!
-        let vec_of_table_names: Vec<Option<String>> = col_of_strings
+        let vec_of_table_names: Vec<String> = col_of_strings
             .iter()
-            .map(|item| {
+            .filter_map(|item| {
                 if let Some(i) = item {
                     Some(i.to_string())
                 } else {
