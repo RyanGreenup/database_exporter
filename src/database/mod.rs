@@ -214,7 +214,13 @@ impl InternalDatabaseOperations for Database {
     }
 }
 
-// Add a docstring AI!
+/// Implementation of database operations for connecting to and querying SQL databases.
+///
+/// This implementation provides methods for:
+/// - Creating new database connections
+/// - Retrieving and printing table information
+/// - Exporting data to Parquet files
+/// - Loading data into DuckDB
 impl Database {
     /// Creates a new instance of a database connection with the provided configuration.
     ///
