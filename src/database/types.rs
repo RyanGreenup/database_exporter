@@ -54,7 +54,7 @@ impl DatabaseType {
                 query: r#"
                     SELECT table_name
                     FROM information_schema.tables
-                    WHERE table_schema='public' AND table_type='BASE TABLE';"#
+                    WHERE table_schema='public' AND table_type='BASE TABLE'"#
                     .to_string(),
                 column_name: "table_name".to_string(),
             },
