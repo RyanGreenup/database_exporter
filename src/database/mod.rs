@@ -384,7 +384,16 @@ impl Database {
     }
 }
 
-// Add a docstring AI!
+/// Writes a DataFrame to a Parquet file at the specified path.
+///
+/// # Arguments
+///
+/// * `df` - A mutable reference to the DataFrame to write
+/// * `filename` - The path where the Parquet file will be written
+///
+/// # Returns
+///
+/// A `Result` indicating success or a `DatabaseError` if the write operation fails
 pub fn write_dataframe_to_parquet(
     df: &mut DataFrame,
     filename: &Path,
