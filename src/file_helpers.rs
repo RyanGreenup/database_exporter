@@ -33,14 +33,20 @@ impl std::error::Error for DuckDBError {}
 // To save memory we should drop the dataframe before getting here
 /// Write parquet files to a duckdb table with an optional schema
 /// The schema will be sanitized first
+/// Removes the database first
 pub fn write_parquet_files_to_duckdb_table(
     parquet_paths: Vec<TableParquet>,
     schema: &str,
     file_location: &Path,
 ) -> Result<(), DuckDBError> {
+    // Remove the File
+    remove_database(file_location)?;
+
+    // Sanitize the Schema
     let schema = &sanitize_schema(schema);
 
     // Open a connection
+    // NOTE map to a connection error as PathBuf probably fixed the path
     let duckdb_conn =
         Connection::open(PathBuf::from(file_location)).map_err(DuckDBError::ConnectionError)?;
 
@@ -85,24 +91,29 @@ pub fn write_parquet_files_to_duckdb_table(
 
 pub fn create_schema(schema: &str, conn: &Connection) -> Result<(), DuckDBError> {
     let schema = &sanitize_schema(schema);
-    
-    // First check if schema exists
-    let mut stmt = conn
-        .prepare(
-            "SELECT COUNT(*) > 0 AS schema_exists 
-             FROM information_schema.schemata 
-             WHERE schema_name = ?",
-        )
-        .map_err(DuckDBError::ExecutionError)?;
 
-    let exists: bool = stmt
-        .query_row([schema], |row| row.get(0))
-        .map_err(DuckDBError::ExecutionError)?;
-
-    // Create schema if it doesn't exist
-    if !exists {
-        conn.execute(&format!("CREATE SCHEMA {schema}"), [])
+    if schema != "main" {
+        conn.execute(&format!("CREATE SCHEMA IF NOT EXISTS {schema}"), [])
             .map_err(DuckDBError::ExecutionError)?;
+    } else {
+        /*
+        // First check if schema exists
+        let mut stmt = conn
+            .prepare(
+                "SELECT COUNT(*) > 0 AS schema_exists
+             FROM information_schema.schemata
+             WHERE schema_name = ?",
+            )
+            .map_err(DuckDBError::ExecutionError)?;
+
+        let exists: bool = stmt
+            .query_row([schema], |row| row.get(0))
+            .map_err(DuckDBError::ExecutionError)?;
+
+        if !exists {
+            eprintln!("WARNING The main schema does not exist! This is unexpected in duckdb");
+        }
+        */
     }
 
     Ok(())
@@ -129,4 +140,21 @@ pub fn sanitize_schema(schema: &str) -> String {
     } else {
         sanitized
     }
+}
+
+// Write a docstring AI!
+pub fn remove_database(file_location: &Path) -> Result<(), DuckDBError> {
+    // Remove the database if it exists
+    match std::fs::remove_file(file_location) {
+        Ok(()) => {}
+        Err(e) => match e.kind() {
+            std::io::ErrorKind::NotFound => {}
+            _ => {
+                return Err(DuckDBError::InvalidPathError(format!(
+                    "Unable to Remove Existing database!\n {e}"
+                )))
+            }
+        },
+    }
+    Ok(())
 }
