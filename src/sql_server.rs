@@ -2,14 +2,9 @@ use crate::config::SQLEngineConfig;
 use crate::file_helpers::{write_dataframe_to_parquet, write_parquet_files_to_duckdb_table};
 use crate::helpers::TableParquet;
 use connectorx::prelude::*;
-use duckdb::{params, Connection, Result};
 use polars::frame::DataFrame;
-use polars::io::parquet;
-use polars::prelude::ParquetWriter;
-use serde::{Deserialize, Serialize};
-use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub struct GetTablesQuery {
     /// The query that will return all tables for the given database
@@ -344,25 +339,24 @@ impl InternalDatabaseOperations for Database {
         &self.source_conn
     }
 
-    fn get_table_query(table: &str, limit: Option<u32>) -> String {
-        DatabaseType::SQLServer.get_rows_query(table, limit)
+    fn get_table_query(&self, table: &str, limit: Option<u32>) -> String {
+        self.db_type.get_rows_query(table, limit)
     }
 
-    fn get_query_all_tables() -> GetTablesQuery {
-        DatabaseType::SQLServer.get_tables_query()
+    fn get_query_all_tables(&self) -> GetTablesQuery {
+        self.db_type.get_tables_query()
     }
 }
 
 impl PublicDatabaseOperations for Database {
-    fn new(config: SQLEngineConfig) -> Self {
-        let db_type = DatabaseType::SQLServer;
+    fn new(config: SQLEngineConfig, db_type: DatabaseType) -> Self {
         let uri = db_type.create_connection_string(&config);
         let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
         
         Self {
             config,
-            uri_string: uri, 
-            source_conn,
+            uri_string: uri,
+            source_conn, 
             db_type,
         }
     }

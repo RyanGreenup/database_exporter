@@ -1,14 +1,6 @@
-use connectorx::prelude::*;
-use duckdb::Connection;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-use crate::sql_server::SQLServer;
-
-struct DatabaseEngine {
-    pub sql_server: SQLServer,
-    pub postgres: SQLEngineConfig,
-}
 
 
 

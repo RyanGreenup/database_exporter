@@ -9,7 +9,7 @@ mod postgres;
 use clap::Parser;
 use cli::Cli;
 use config::{Config, SQLEngineConfig};
-use sql_server::{PublicDatabaseOperations, SQLServer};
+use sql_server::{PublicDatabaseOperations, Database, DatabaseType};
 use std::process;
 
 fn main() {
@@ -26,7 +26,7 @@ fn main() {
 }
 
 fn run(sql_config: config::SQLEngineConfig) {
-    let ms_db = SQLServer::new(sql_config);
+    let ms_db = Database::new(sql_config, DatabaseType::SQLServer);
 
     // Print all the tables
     // ms_db.print_tables()
