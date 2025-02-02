@@ -45,7 +45,16 @@ trait InternalDatabaseOperations {
     /// A `GetTablesQuery` struct containing the SQL query and the column name for table names.
     fn get_query_all_tables() -> GetTablesQuery;
 
-    // Write a docstring AI!
+    /// Returns the query to retrieve data from a specific table with an optional row limit.
+    ///
+    /// # Arguments
+    ///
+    /// * `table` - The name of the table to retrieve data from.
+    /// * `limit` - An optional limit on the number of rows to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// A SQL query string for retrieving data from the specified table with an optional row limit.
     fn get_table_query(table: &str, limit: Option<u32>) -> String;
 
     /// Retrieves an ArrowDestination for a given table with an optional row limit.
