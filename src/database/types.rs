@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 pub enum DatabaseType {
     SQLServer,
     Postgres,
+    MySQL,
 }
 impl DatabaseType {
     /// Creates a connection string for the database type
@@ -32,6 +33,12 @@ impl DatabaseType {
             DatabaseType::Postgres => {
                 format!(
                     "postgresql://{}:{}@{}:{}/{}",
+                    config.username, config.password, config.host, config.port, config.database
+                )
+            }
+            DatabaseType::MySQL => {
+                format!(
+                    "mysql://{}:{}@{}:{}/{}",
                     config.username, config.password, config.host, config.port, config.database
                 )
             }
@@ -60,6 +67,15 @@ impl DatabaseType {
                     .to_string(),
                 column_name: "table_name".to_string(),
             },
+            DatabaseType::MySQL => GetTablesQuery {
+                query: r#"
+                    SELECT TABLE_NAME as table_name 
+                    FROM INFORMATION_SCHEMA.TABLES 
+                    WHERE TABLE_SCHEMA = DATABASE() 
+                    AND TABLE_TYPE = 'BASE TABLE'"#
+                    .to_string(),
+                column_name: "table_name".to_string(),
+            },
         }
     }
 
@@ -71,6 +87,10 @@ impl DatabaseType {
                 None => format!("SELECT * FROM {}", table),
             },
             DatabaseType::Postgres => match limit {
+                Some(n) => format!("SELECT * FROM {} LIMIT {}", table, n),
+                None => format!("SELECT * FROM {}", table),
+            },
+            DatabaseType::MySQL => match limit {
                 Some(n) => format!("SELECT * FROM {} LIMIT {}", table, n),
                 None => format!("SELECT * FROM {}", table),
             },
