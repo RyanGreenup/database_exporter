@@ -29,8 +29,10 @@ pub struct SQLServer {
 }
 
 pub trait DatabaseOperations {
+    /// Returns a reference to the database connection.
     fn get_connection(&self) -> &connectorx::source_router::SourceConn;
 
+    // Write a docstring AI!
     fn new(config: SQLEngineConfig) -> Self
     where
         Self: Sized;
@@ -191,7 +193,6 @@ pub trait DatabaseOperations {
 }
 
 impl DatabaseOperations for SQLServer {
-    /// Returns a reference to the database connection.
     fn get_connection(&self) -> &connectorx::source_router::SourceConn {
         &self.source_conn
     }
