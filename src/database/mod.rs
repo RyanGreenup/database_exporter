@@ -15,7 +15,7 @@ use types::DatabaseType;
 pub enum DatabaseError {
     ArrowError(ConnectorXOutError),
     DataFrameError(ArrowDestinationError),
-
+    PolarsError(PolarsError),
 }
 
 impl std::fmt::Display for DatabaseError {
@@ -23,6 +23,7 @@ impl std::fmt::Display for DatabaseError {
         match self {
             DatabaseError::ArrowError(e) => write!(f, "Arrow destination error: {e}"),
             DatabaseError::DataFrameError(e) => write!(f, "DataFrame error: {e}"),
+            DatabaseError::PolarsError(e) => write!(f, "Polars error: {e}"),
         }
     }
 }
@@ -38,6 +39,12 @@ impl From<ConnectorXOutError> for DatabaseError {
 impl From<ArrowDestinationError> for DatabaseError {
     fn from(error: ArrowDestinationError) -> Self {
         DatabaseError::DataFrameError(error)
+    }
+}
+
+impl From<PolarsError> for DatabaseError {
+    fn from(error: PolarsError) -> Self {
+        DatabaseError::PolarsError(error)
     }
 }
 
@@ -116,15 +123,8 @@ trait InternalDatabaseOperations {
         get_arrow(self.get_connection(), None, queries)
     }
 
-    // TODO don't panic, this should still return an exception, panic should happen
-    // closer to the user-touching logic, not implemented because time around PolarsResult type
-    // Probably can use unwrap to propagate that error though.
     /// Get the tables from the database
-    /// This will panic if unable to get the tables
-    fn get_tables(&self) -> Vec<String> {
-        // Some Queries
-        // let queries = &[CXQuery::from("SELECT * FROM Track")];
-
+    fn get_tables(&self) -> Result<Vec<String>, DatabaseError> {
         // Get the query for all tables
         let all_tables_query = self.get_query_all_tables();
         let query = all_tables_query.query;
@@ -133,40 +133,40 @@ trait InternalDatabaseOperations {
         let queries = &[CXQuery::from(&query)];
 
         // Get a Destination using Arrow
-        let destination = get_arrow(self.get_connection(), None, queries).expect("Run Failed");
+        let destination = get_arrow(self.get_connection(), None, queries)
+            .map_err(DatabaseError::from)?;
 
-        // Get a Dataframe (NOTE must have same polars_core version in connectorx
-        // and polars, look at `cargo tree | grep polars-core`)
-        let data = destination.polars().expect("Unable to get Dataframe");
+        // Get a Dataframe
+        let data = destination.polars()
+            .map_err(DatabaseError::from)?;
 
-        // TODO we need a struct or Enum
+        // Extract column and convert to strings
         let col_of_strings = data
             .column(&colname)
-            .unwrap_or_else(|e: PolarsError| {
-                panic!("Unable to extract column: {colname} from query:\n{query}\n{e}")
-            })
+            .map_err(DatabaseError::from)?
             .try_str()
-            .unwrap_or_else(|| {
-                panic!("Unable to parse column {colname} as strings from query:\n{query}")
-            });
+            .ok_or_else(|| {
+                DatabaseError::PolarsError(PolarsError::ComputeError(
+                    format!("Unable to parse column {colname} as strings").into()
+                ))
+            })?;
 
+        // Convert to Vec<String>
         let vec_of_table_names: Vec<String> = col_of_strings
             .iter()
             .filter_map(|item| {
                 if let Some(i) = item {
                     Some(i.to_string())
                 } else {
-                    // Let the user know so it can be investigated as this is unexpected
                     eprintln!(
                         "One of the table names was not found, which is unexpected behaviour"
                     );
-                    // Filter map automatically removes None Values
                     None
                 }
             })
             .collect();
 
-        vec_of_table_names
+        Ok(vec_of_table_names)
     }
 }
 
@@ -247,10 +247,11 @@ impl Database {
 
     /// Prints the names of all tables to the console.
     #[allow(dead_code)]
-    pub fn print_tables(&self) {
-        for table in self.get_tables() {
+    pub fn print_tables(&self) -> Result<(), DatabaseError> {
+        for table in self.get_tables()? {
             println!("{table}");
         }
+        Ok(())
     }
 
     /*
@@ -281,24 +282,22 @@ impl Database {
     /// # Arguments
     ///
     /// * `limit` - An optional limit on the number of rows to retrieve from each table.
-    pub fn export_dataframes(&self, limit: Option<u32>) {
+    pub fn export_dataframes(&self, limit: Option<u32>) -> Result<(), DatabaseError> {
         // Get paths to parquet files
         let parquet_paths: Vec<TableParquet> = self
-            .get_tables()
-            // Consume the original vector
+            .get_tables()?
             .into_iter()
-            // Cast to TableParquet which generates a file path
             .map(|table_name| TableParquet::new(&table_name))
-            // Collect into an iterator
             .collect();
 
         // Write to files
         for tp in &parquet_paths {
-            self.write_to_parquet(tp, limit);
+            self.write_to_parquet(tp, limit)?;
         }
 
         // Write to duckdb
         write_parquet_files_to_duckdb_table(parquet_paths, None);
+        Ok(())
     }
 
     /// Writes a DataFrame for a given table to a specified Parquet file path.
