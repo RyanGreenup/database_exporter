@@ -224,6 +224,8 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
         Ok(())
     }
 
+
+    // Write a docstring AI!
     fn export_dataframes(&self, limit: Option<u32>) {
         // Get paths to parquet files
         let parquet_paths: Vec<TableParquet> = self
