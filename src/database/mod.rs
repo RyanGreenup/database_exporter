@@ -12,6 +12,7 @@ use polars::prelude::ParquetWriter;
 use std::path::Path;
 use types::DatabaseType;
 
+// Add a Docstring AI!
 #[derive(Debug)]
 pub enum DatabaseError {
     ArrowError(ConnectorXOutError),
