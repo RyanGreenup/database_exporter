@@ -1,6 +1,6 @@
 use crate::helpers::TableParquet;
 use duckdb::Connection;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 // TODO I would like to make this a default trait method
 // But I can't because it requires the duckdb_conn
@@ -12,13 +12,14 @@ use std::path::PathBuf;
 // hit the database again and load the network
 // parquet is memory mapped so it's probably better to do it this way
 // To save memory we should drop the dataframe before getting here
-pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, schema: Option<&str>) {
-    // Use main by default
-    let schema = schema.unwrap_or("main");
+/// Write parquet files to a duckdb table with an optional schema
+/// The schema will be sanitized first
+pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, schema: &str, file_location: &Path) {
+    let schema = &sanitize_schema(schema);
 
     // Open a connection
     // TODO need to figure out how to get the path for the db from CLI or config toml
-    let duckdb_conn = Connection::open(PathBuf::from("./data.duckdb"))
+    let duckdb_conn = Connection::open(PathBuf::from(file_location))
         // TODO don't panic!
         .expect("Unable to create duckdb file");
 
@@ -44,7 +45,7 @@ pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, sch
                 ) {
                     Ok(_n) => {}
                     Err(e) => eprintln!(
-                        "ERROR! Unable to read table {} from path {}\n{} ",
+                        "ERROR! Unable to execute SQL Query for table {}\n from path {}\n{}",
                         parquet_path.table_name, path_str, e
                     ),
                 }
@@ -55,4 +56,9 @@ pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, sch
             ),
         };
     }
+}
+
+/// Modify a string so it can be a valid duckdb schema
+fn sanitize_schema(schema: &str) -> String {
+    // finish the function AI!
 }
