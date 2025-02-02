@@ -119,7 +119,32 @@ pub fn create_schema(schema: &str, conn: &Connection) -> Result<(), DuckDBError>
     Ok(())
 }
 
-// Write a docstring AI!
+/// Sanitizes a schema name to be compatible with DuckDB naming requirements.
+///
+/// # Arguments
+///
+/// * `schema` - The schema name to sanitize
+///
+/// # Returns
+///
+/// A sanitized string that:
+/// - Is converted to lowercase
+/// - Starts with a letter (prefixed with 's' if needed)
+/// - Contains only alphanumeric characters and underscores
+/// - Returns "schema" if input would result in empty string
+///
+/// # Examples
+///
+/// ```
+/// let sanitized = sanitize_schema("My Schema!");
+/// assert_eq!(sanitized, "my_schema_");
+///
+/// let sanitized = sanitize_schema("123test");
+/// assert_eq!(sanitized, "s123test");
+///
+/// let sanitized = sanitize_schema("");
+/// assert_eq!(sanitized, "schema");
+/// ```
 pub fn sanitize_schema(schema: &str) -> String {
     let sanitized: String = schema
         .chars()
