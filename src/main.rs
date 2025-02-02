@@ -29,7 +29,7 @@ fn main() {
                 configs,
                 &cli.get_export_directory(),
                 duckdb_options,
-                cli.database.row_limit,
+                cli.row_limit,
             )
         }
         Err(e) => {
