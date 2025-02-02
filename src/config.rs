@@ -3,7 +3,15 @@ use std::fs;
 use std::path::Path;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DatabaseType {
+    SqlServer,
+    Postgres,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SQLEngineConfig {
+    pub database_type: DatabaseType,
     pub username: String,
     pub password: String,
     pub database: String,
@@ -13,23 +21,15 @@ pub struct SQLEngineConfig {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    #[serde(rename = "SQL Server")]
-    pub sql_server: SQLEngineConfig,
-    pub postgres: SQLEngineConfig,
+    pub database: SQLEngineConfig,
 }
 
 impl Config {
     pub fn load(path: &Path) -> Result<Self, String> {
         if !path.exists() {
             let default_config = Config {
-                sql_server: SQLEngineConfig {
-                    username: "".to_string(),
-                    password: "".to_string(),
-                    database: "".to_string(),
-                    host: "".to_string(),
-                    port: "".to_string(),
-                },
-                postgres: SQLEngineConfig {
+                database: SQLEngineConfig {
+                    database_type: DatabaseType::SqlServer,
                     username: "".to_string(),
                     password: "".to_string(),
                     database: "".to_string(),
