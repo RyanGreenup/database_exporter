@@ -42,15 +42,17 @@ impl DatabaseType {
     pub fn get_tables_query(&self) -> GetTablesQuery {
         match self {
             DatabaseType::SQLServer => GetTablesQuery {
+                // Tolerates trailing semicolon but handled by connectorx
                 query: r#"
                     SELECT TABLE_NAME as table_name
                     FROM INFORMATION_SCHEMA.TABLES
                     WHERE TABLE_TYPE = 'BASE TABLE' AND
-                        TABLE_SCHEMA != 'scratch';"#
+                        TABLE_SCHEMA != 'scratch'"#
                     .to_string(),
                 column_name: "table_name".to_string(),
             },
             DatabaseType::Postgres => GetTablesQuery {
+                // MUST remove trailing semicolon here
                 query: r#"
                     SELECT table_name
                     FROM information_schema.tables
