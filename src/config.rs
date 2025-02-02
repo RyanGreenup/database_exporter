@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+// Add a docstring AI!
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SQLEngineConfig {
     pub database_type: DatabaseType,
