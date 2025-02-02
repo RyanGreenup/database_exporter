@@ -60,5 +60,23 @@ pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, sch
 
 /// Modify a string so it can be a valid duckdb schema
 fn sanitize_schema(schema: &str) -> String {
-    // finish the function AI!
+    let sanitized: String = schema
+        .chars()
+        .enumerate()
+        .filter_map(|(i, c)| {
+            if i == 0 && !c.is_ascii_alphabetic() {
+                Some('s') // Prefix with 's' if doesn't start with letter
+            } else if c.is_ascii_alphanumeric() || c == '_' {
+                Some(c.to_ascii_lowercase())
+            } else {
+                Some('_') // Replace special chars with underscore
+            }
+        })
+        .collect();
+
+    if sanitized.is_empty() {
+        "schema".to_string() // Default if empty
+    } else {
+        sanitized
+    }
 }
