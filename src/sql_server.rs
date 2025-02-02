@@ -29,10 +29,8 @@ pub struct SQLServer {
 }
 
 pub trait DatabaseOperations {
-    /// Get the active connection to the database
     fn get_connection(&self) -> &connectorx::source_router::SourceConn;
 
-    /// Construct the Database Object from the config
     fn new(config: SQLEngineConfig) -> Self
     where
         Self: Sized;
