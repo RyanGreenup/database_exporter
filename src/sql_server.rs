@@ -32,6 +32,8 @@ impl DatabaseType {
         config: &SQLEngineConfig,
     ) -> String {
         match self {
+            /// See connectorx docs for the mssql docstring
+            /// https://sfu-db.github.io/connector-x/databases/mssql.html
             DatabaseType::SQLServer => {
                 let mut uri = format!(
                     "mssql://{}:{}@{}:{}/{}",
@@ -67,7 +69,7 @@ impl DatabaseType {
                 query: r#"
                     SELECT tablename as table_name
                     FROM pg_catalog.pg_tables
-                    WHERE schemaname != 'pg_catalog' AND 
+                    WHERE schemaname != 'pg_catalog' AND
                         schemaname != 'information_schema';"#
                     .to_string(),
                 column_name: "table_name".to_string(),
@@ -353,13 +355,11 @@ impl InternalDatabaseOperations for SQLServer {
 }
 
 impl PublicDatabaseOperations for SQLServer {
-    /// See connectorx docs for the mssql docstring
-    /// https://sfu-db.github.io/connector-x/databases/mssql.html
-    fn new(config: SQLEngineConfig) -> SQLServer {
+    fn new(config: SQLEngineConfig) -> Self {
         let db_type = DatabaseType::SQLServer;
         let uri = db_type.create_connection_string(&config);
         let source_conn = SourceConn::try_from(uri.as_str()).expect("parse conn str failed");
-        
+
         Self {
             config,
             uri_string: uri,
