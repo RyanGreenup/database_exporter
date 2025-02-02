@@ -28,10 +28,15 @@ pub struct SQLServer {
     // duckdb_conn: Connection,
 }
 
-// Write a docstring AI!
+/// Provides internal operations for interacting with a SQL Server database.
+///
+/// This trait defines methods that are used internally by the `SQLServer` struct
+/// to manage database connections and retrieve table information.
 trait InternalDatabaseOperations {
     /// Returns a reference to the database connection.
     fn get_connection(&self) -> &connectorx::source_router::SourceConn;
+
+    // TODO create an enum of structs that contain the queries all in one place?
 
     /// Returns the query to retrieve all table names from the database.
     ///
@@ -39,6 +44,9 @@ trait InternalDatabaseOperations {
     ///
     /// A `GetTablesQuery` struct containing the SQL query and the column name for table names.
     fn get_query_all_tables() -> GetTablesQuery;
+
+    // Write a docstring AI!
+    fn get_table_query(table: &str, limit: Option<u32>) -> String;
 
     /// Retrieves an ArrowDestination for a given table with an optional row limit.
     /// The ArrowDestination is an in-memory representation
@@ -56,10 +64,7 @@ trait InternalDatabaseOperations {
     /// An ArrowDestination containing the retrieved data.
     fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination {
         // Build the query
-        let query = match limit {
-            Some(n) => format!("SELECT TOP {} * FROM {}", n, table),
-            None => format!("SELECT * FROM {}", table),
-        };
+        let query = Self::get_table_query(table, limit);
 
         // Get the query for the table
         let queries = &[CXQuery::from(&query)];
@@ -261,6 +266,13 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
 impl InternalDatabaseOperations for SQLServer {
     fn get_connection(&self) -> &connectorx::source_router::SourceConn {
         &self.source_conn
+    }
+
+    fn get_table_query(table: &str, limit: Option<u32>) -> String {
+        match limit {
+            Some(n) => format!("SELECT TOP {} * FROM {}", n, table),
+            None => format!("SELECT * FROM {}", table),
+        }
     }
 
     fn get_query_all_tables() -> GetTablesQuery {
