@@ -2,15 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+use crate::database::types::DatabaseType;
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum DatabaseType {
-    SqlServer,
-    Postgres,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SQLEngineConfig {
     pub database_type: DatabaseType,
     pub username: String,

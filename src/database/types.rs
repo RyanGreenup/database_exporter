@@ -1,13 +1,15 @@
+use serde::{Deserialize, Serialize};
 use crate::config::SQLEngineConfig;
 use crate::database::GetTablesQuery;
 
 /// Represents different types of SQL databases and their specific query formats
 /// Eventually this will be replaced with <connectorx::source_router::SourceType>
 /// For now not all databases have been implemented
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum DatabaseType {
     SQLServer,
-    PostgreSQL,
+    Postgres,
 }
 impl DatabaseType {
     /// Creates a connection string for the database type
