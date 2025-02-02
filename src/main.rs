@@ -73,7 +73,17 @@ fn run_and_watch(
 }
 
 
-// Add a docstring  AI!
+/// Processes and exports data from multiple database configurations.
+///
+/// # Arguments
+///
+/// * `configs` - A HashMap of database configurations, keyed by database name
+/// * `export_directory` - The directory path where exported files will be saved
+/// * `duckdb_options` - Optional DuckDB export configuration
+/// * `row_limit` - Optional limit on the number of rows to export per table
+///
+/// This function iterates through each database configuration, creates a new database
+/// connection, and exports the data to Parquet files and optionally to DuckDB.
 fn run(
     configs: HashMap<String, SQLEngineConfig>,
     export_directory: &Path,
