@@ -1,6 +1,6 @@
 use crate::helpers::TableParquet;
 use duckdb::Connection;
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 // TODO I would like to make this a default trait method
 // But I can't because it requires the duckdb_conn
@@ -14,14 +14,24 @@ use std::path::{PathBuf, Path};
 // To save memory we should drop the dataframe before getting here
 /// Write parquet files to a duckdb table with an optional schema
 /// The schema will be sanitized first
-pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, schema: &str, file_location: &Path) {
+pub fn write_parquet_files_to_duckdb_table(
+    parquet_paths: Vec<TableParquet>,
+    schema: &str,
+    file_location: &Path,
+) -> Result<(), std::error::Error> {
     let schema = &sanitize_schema(schema);
 
     // Open a connection
-    // TODO need to figure out how to get the path for the db from CLI or config toml
-    let duckdb_conn = Connection::open(PathBuf::from(file_location))
-        // TODO don't panic!
-        .expect("Unable to create duckdb file");
+    // Fix this error handling AI!
+    let duckdb_conn = match Connection::open(PathBuf::from(file_location)) {
+        Ok(conn) => conn,
+        Err(e) => {
+            eprintln!("Unable to open DuckDB Connection\n{e}");
+            return Err(e);
+        },
+    };
+
+    let schema = create_schema(schema, &duckdb_conn);
 
     for parquet_path in parquet_paths {
         // Change into the directory
@@ -58,8 +68,22 @@ pub fn write_parquet_files_to_duckdb_table(parquet_paths: Vec<TableParquet>, sch
     }
 }
 
+pub fn create_schema(schema: &str, conn: &Connection) {
+    conn.execute(
+        &format!(
+            r#"
+            SELECT COUNT(*) > 0 AS schema_exists
+            FROM information_schema.schemata
+            WHERE schema_name = '{}';
+            "#,
+            &sanitize_schema(schema),
+        ),
+        [],
+    );
+}
+
 /// Modify a string so it can be a valid duckdb schema
-fn sanitize_schema(schema: &str) -> String {
+pub fn sanitize_schema(schema: &str) -> String {
     let sanitized: String = schema
         .chars()
         .enumerate()
