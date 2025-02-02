@@ -28,6 +28,7 @@ pub struct SQLServer {
     // duckdb_conn: Connection,
 }
 
+// Write a docstring AI!
 trait InternalDatabaseOperations {
     /// Returns a reference to the database connection.
     fn get_connection(&self) -> &connectorx::source_router::SourceConn;
@@ -116,16 +117,21 @@ trait InternalDatabaseOperations {
     }
 }
 
-/// Creates a new instance of SQLServer with the provided configuration.
+/// Provides public operations for interacting with a Connector-X database
 ///
-/// # Arguments
-///
-/// * `config` - The configuration for the SQL engine.
-///
-/// # Returns
-///
-/// A new instance of SQLServer.
+/// This trait extends `InternalDatabaseOperations` and provides additional methods
+/// for common tasks such as printing tables, retrieving dataframes, writing to Parquet,
+/// and exporting dataframes to DuckDB.
 pub trait PublicDatabaseOperations: InternalDatabaseOperations {
+    /// Creates a new instance of SQLServer with the provided configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The configuration for the SQL engine.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of SQLServer.
     fn new(config: SQLEngineConfig) -> Self
     where
         Self: Sized;
