@@ -1,6 +1,6 @@
 mod cli;
 mod config;
-mod sql_server;
+mod database;
 // TODO these should be merged
 mod file_helpers;
 mod helpers;
@@ -8,7 +8,8 @@ mod postgres;
 use clap::Parser;
 use cli::Cli;
 use config::Config;
-use sql_server::{Database, DatabaseType};
+use database::types::DatabaseType;
+use database::Database;
 use std::process;
 
 fn main() {
