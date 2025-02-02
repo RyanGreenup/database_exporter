@@ -64,6 +64,10 @@ pub trait DatabaseOperations {
     }
 
     /// Retrieves an ArrowDestination for a given table with an optional row limit.
+    /// The ArrowDestination is an in-memory representation
+    /// which can later be transformed into other useful representations.
+    /// Note, that ArrowDestination does not implement clone and
+    /// later transformations take ownership, so this is only needed internally
     ///
     /// # Arguments
     ///
@@ -87,6 +91,7 @@ pub trait DatabaseOperations {
         get_arrow(&self.get_connection(), None, queries).expect("Run Failed")
     }
 
+    // Write a docstring AI!
     fn get_dataframe(&self, table: &str, limit: Option<u32>) -> DataFrame {
         // Get the arrow Destination
         let destination = self.get_arrow_destination(table, limit);
