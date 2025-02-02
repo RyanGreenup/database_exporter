@@ -7,7 +7,7 @@ mod helpers;
 mod postgres;
 use clap::Parser;
 use cli::Cli;
-use config::Config;
+use config::SQLEngineConfig;
 use database::types::DatabaseType;
 use database::Database;
 use std::process;
@@ -16,7 +16,7 @@ fn main() {
     let cli = Cli::parse();
     let config_path = cli.get_config_path();
 
-    match Config::load(&config_path) {
+    match SQLEngineConfig::load(&config_path) {
         Ok(config) => run(config.sql_server),
         Err(e) => {
             eprintln!("{}", e);
