@@ -3,11 +3,43 @@ pub mod types;
 use crate::config::SQLEngineConfig;
 use crate::file_helpers::{write_dataframe_to_parquet, write_parquet_files_to_duckdb_table};
 use crate::helpers::TableParquet;
+use connectorx::destinations::arrow::ArrowDestinationError;
 use connectorx::prelude::*;
+use polars::error::PolarsError;
 use polars::frame::DataFrame;
 use std::io;
 use std::path::Path;
 use types::DatabaseType;
+
+#[derive(Debug)]
+pub enum DatabaseError {
+    ArrowError(ConnectorXOutError),
+    DataFrameError(ArrowDestinationError),
+
+}
+
+impl std::fmt::Display for DatabaseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DatabaseError::ArrowError(e) => write!(f, "Arrow destination error: {e}"),
+            DatabaseError::DataFrameError(e) => write!(f, "DataFrame error: {e}"),
+        }
+    }
+}
+
+impl std::error::Error for DatabaseError {}
+
+impl From<ConnectorXOutError> for DatabaseError {
+    fn from(error: ConnectorXOutError) -> Self {
+        DatabaseError::ArrowError(error)
+    }
+}
+
+impl From<ArrowDestinationError> for DatabaseError {
+    fn from(error: ArrowDestinationError) -> Self {
+        DatabaseError::DataFrameError(error)
+    }
+}
 
 pub struct GetTablesQuery {
     /// The query that will return all tables for the given database
@@ -69,7 +101,11 @@ trait InternalDatabaseOperations {
     /// # Returns
     ///
     /// An ArrowDestination containing the retrieved data.
-    fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination {
+    fn get_arrow_destination(
+        &self,
+        table: &str,
+        limit: Option<u32>,
+    ) -> Result<ArrowDestination, ConnectorXOutError> {
         // Build the query
         let query = self.get_table_query(table, limit);
 
@@ -77,10 +113,14 @@ trait InternalDatabaseOperations {
         let queries = &[CXQuery::from(&query)];
 
         // Get a Destination using Arrow
-        get_arrow(self.get_connection(), None, queries).expect("Run Failed")
+        get_arrow(self.get_connection(), None, queries)
     }
 
+    // TODO don't panic, this should still return an exception, panic should happen
+    // closer to the user-touching logic, not implemented because time around PolarsResult type
+    // Probably can use unwrap to propagate that error though.
     /// Get the tables from the database
+    /// This will panic if unable to get the tables
     fn get_tables(&self) -> Vec<String> {
         // Some Queries
         // let queries = &[CXQuery::from("SELECT * FROM Track")];
@@ -102,7 +142,7 @@ trait InternalDatabaseOperations {
         // TODO we need a struct or Enum
         let col_of_strings = data
             .column(&colname)
-            .unwrap_or_else(|e| {
+            .unwrap_or_else(|e: PolarsError| {
                 panic!("Unable to extract column: {colname} from query:\n{query}\n{e}")
             })
             .try_str()
@@ -190,14 +230,19 @@ impl Database {
     /// # Returns
     ///
     /// A DataFrame containing the retrieved data.
-    pub fn get_dataframe(&self, table: &str, limit: Option<u32>) -> DataFrame {
+    pub fn get_dataframe(
+        &self,
+        table: &str,
+        limit: Option<u32>,
+    ) -> Result<DataFrame, DatabaseError> {
         // Get the arrow Destination
-        let destination = self.get_arrow_destination(table, limit);
+        let destination = self.get_arrow_destination(table, limit)?;
 
         // Get a Dataframe (NOTE must have same polars_core version in connectorx
         // and polars, look at `cargo tree | grep polars-core`)
 
-        destination.polars().expect("Unable to get Dataframe")
+        // Get a Dataframe
+        destination.polars().map_err(DatabaseError::from)
     }
 
     /// Prints the names of all tables to the console.
@@ -218,15 +263,17 @@ impl Database {
     ///
     /// * `parquet_path` - A reference to a `TableParquet` struct containing the table name and file path.
     /// * `limit` - An optional limit on the number of rows to retrieve from the table.
-    pub fn write_to_parquet(&self, parquet_path: &TableParquet, limit: Option<u32>) {
+    pub fn write_to_parquet(&self, parquet_path: &TableParquet, limit: Option<u32>) -> Result<(), DatabaseError> {
         // Get the dataframe for the table
-        let mut df = self.get_dataframe(&parquet_path.table_name, limit);
+        let mut df = self.get_dataframe(&parquet_path.table_name, limit)?;
 
         // Get the standardised filepath
         let filename = &parquet_path.file_path;
 
         // Write the dataframe to parquet
         write_dataframe_to_parquet(&mut df, filename);
+
+        Ok(())
     }
 
     /// Exports DataFrames for all tables to Parquet files and loads them into DuckDB.
