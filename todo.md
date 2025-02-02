@@ -1,12 +1,17 @@
 - [X] Don't Panic
-- Specify export location
-    - "./data/extracted/parquets"
-    - Include duckdb?
+- [ ] Specify export location
+    - [X]  "./data/extracted/parquets"
+    - [ ] Include duckdb
+        - [ ] We'll need a struct for the db export info
+- [ ] Docstrings
+- [ ] Schema for database key
+- [ ] Docs
+- [X] Run should act on all keys
+    - [X] don't panic
+- [ ] Watch
 - Upload to Google Drive
 - Upload a sheet to Google Drive
 - Config should return hashmap
-- Run should act on all keys
-    - don't panic
 - Pass in desired output path
 - may as well add maria and sqlite
 - Watch logic

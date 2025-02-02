@@ -1,8 +1,8 @@
 pub mod types;
 
-use crate::config::SQLEngineConfig;
 use crate::file_helpers::write_parquet_files_to_duckdb_table;
 use crate::helpers::TableParquet;
+use crate::{config::SQLEngineConfig, file_helpers::DuckDBError};
 use connectorx::destinations::arrow::ArrowDestinationError;
 use connectorx::prelude::*;
 use polars::error::PolarsError;
@@ -17,6 +17,7 @@ pub enum DatabaseError {
     DataFrameError(ArrowDestinationError),
     PolarsError(PolarsError),
     IoError(std::io::Error),
+    DuckDBError(DuckDBError),
 }
 
 impl std::fmt::Display for DatabaseError {
@@ -26,6 +27,9 @@ impl std::fmt::Display for DatabaseError {
             DatabaseError::DataFrameError(e) => write!(f, "DataFrame error: {e}"),
             DatabaseError::PolarsError(e) => write!(f, "Polars error: {e}"),
             DatabaseError::IoError(e) => write!(f, "IO Error: {e}"),
+            DatabaseError::DuckDBError(e) => {
+                write!(f, "Error Loading Parquet Files into DuckDB: {e}")
+            }
         }
     }
 }
@@ -53,6 +57,12 @@ impl From<PolarsError> for DatabaseError {
 impl From<std::io::Error> for DatabaseError {
     fn from(error: std::io::Error) -> Self {
         DatabaseError::IoError(error)
+    }
+}
+
+impl From<DuckDBError> for DatabaseError {
+    fn from(error: DuckDBError) -> Self {
+        DatabaseError::DuckDBError(error)
     }
 }
 
@@ -303,7 +313,17 @@ impl Database {
     /// # Arguments
     ///
     /// * `limit` - An optional limit on the number of rows to retrieve from each table.
-    pub fn export_dataframes(&self, limit: Option<u32>, export_directory: &Path) -> Result<(), DatabaseError> {
+    /// * `export_directory` - A Directory location to export files to
+    /// * `include_duckdb` - Whether to include exported duckdb files as well
+    /// * `schema` - The schema to use in duckdb
+    pub fn export_dataframes(
+        &self,
+        limit: Option<u32>,
+        export_directory: &Path,
+        include_duckdb: bool,
+        database_name: &str,
+        schema: &str,
+    ) -> Result<(), DatabaseError> {
         // Get paths to parquet files
         let parquet_paths: Vec<TableParquet> = self
             .get_tables()?
@@ -321,8 +341,14 @@ impl Database {
             }
         }
 
-        // Write to duckdb
-        write_parquet_files_to_duckdb_table(writable_parquet_paths, None);
+        if include_duckdb {
+            // Write to duckdb
+            write_parquet_files_to_duckdb_table(
+                writable_parquet_paths,
+                schema,
+                &export_directory.join(database_name),
+            )?;
+        }
         Ok(())
     }
 

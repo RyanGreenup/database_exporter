@@ -21,22 +21,6 @@ impl std::fmt::Display for DuckDBError {
 
 impl std::error::Error for DuckDBError {}
 
-// TODO I would like to make this a default trait method
-// But I can't because it requires the duckdb_conn
-// Figure this out, maybe make it more general?
-
-// TODO Export to DuckDB
-// Here we just load the parquets
-// connectorx can't clone in memory which would
-// hit the database again and load the network
-// parquet is memory mapped so it's probably better to do it this way
-// To save memory we should drop the dataframe before getting here
-/// Write parquet files to a duckdb table with an optional schema
-/// The schema will be sanitized first
-/// Removes the database first
-
-
-
 /// Writes multiple Parquet files to tables in a DuckDB database.
 ///
 /// # Arguments
@@ -55,7 +39,7 @@ impl std::error::Error for DuckDBError {}
 /// - Removes any existing database file at the specified location
 /// - Creates the schema if it doesn't exist
 /// - Creates or replaces tables for each Parquet file
-/// - Tables will be named according to the TableParquet struct names
+/// - Tables will be named according to the table names in the TableParquet struct
 ///
 /// # Examples
 ///
@@ -67,13 +51,23 @@ impl std::error::Error for DuckDBError {}
 /// ];
 /// write_parquet_files_to_duckdb_table(parquets, "myapp", Path::new("./db.duckdb"))?;
 /// ```
+///
+/// # Considerations
+///
+/// ConnectorX cannot clone the ArrowDestination in memory so one must either
+/// hit the database again to get the data or cache to disk.
+/// Given that parquet is already well integrated with duckdb, it's simpler
+/// to offload that task to duckdb rather than handle it inernally.
 pub fn write_parquet_files_to_duckdb_table(
     parquet_paths: Vec<TableParquet>,
     schema: &str,
     file_location: &Path,
 ) -> Result<(), DuckDBError> {
-    // Remove the File
-    remove_database(file_location)?;
+    // Don't remove the File as this is called for each item in the config
+    // This replaces the table anyway, SQLite only writes as needed
+    // So this might be kinder to disk usage
+    // The caller / user must remove it.
+    // remove_database(file_location)?;
 
     // Sanitize the Schema
     let schema = &sanitize_schema(schema);
@@ -90,13 +84,17 @@ pub fn write_parquet_files_to_duckdb_table(
         // Change into the directory
         match parquet_path.file_path.to_str() {
             Some(path_str) => {
+                let query = &format!(
+                    // Evaluate whether we want schema or simply __
+                    // PITA in the CLI to use schema
+                    "CREATE OR REPLACE TABLE {schema}.{} AS SELECT * FROM '{}';",
+                    &parquet_path.table_name,
+                    &path_str.to_string()
+                );
+                // println!("{query}");
                 match duckdb_conn.execute(
                     // https://duckdb.org/docs/data/parquet/overview.html
-                    &format!(
-                        "CREATE OR REPLACE TABLE {schema}.{} AS SELECT * FROM '{}';",
-                        &parquet_path.table_name,
-                        &path_str.to_string()
-                    ),
+                    query,
                     [],
                 ) {
                     Ok(_n) => {}

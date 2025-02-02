@@ -2,6 +2,16 @@ use clap::Parser;
 use directories::ProjectDirs;
 use std::path::PathBuf;
 
+// SELECT schema_name FROM information_schema.schemata;
+
+// SHOW ALL TABLES
+
+// .tables is useless across schema
+
+// SELECT table_name
+// FROM information_schema.tables
+// WHERE table_schema = 'schema_name';
+
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
 pub struct Cli {
@@ -12,6 +22,15 @@ pub struct Cli {
     /// Export Directory
     #[arg(default_value_t = String::from("./data/extracted/parquets"), short, long)]
     export_directory: String,
+
+    /// Create Duckdb from all Parquet files
+    #[arg(default_value_t = true, short, long)]
+    pub include_duckdb: bool,
+
+    /// Database Name for duckdb export, this will be underneath the export directory
+    #[arg(default_value_t = String::from("database.duckdb"), short, long)]
+    pub duckdb_file_name: String
+
 }
 
 impl Cli {
