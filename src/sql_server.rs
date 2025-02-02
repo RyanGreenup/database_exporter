@@ -44,6 +44,8 @@ pub trait DatabaseOperations {
     fn new(config: SQLEngineConfig) -> Self
     where
         Self: Sized;
+
+
     fn get_query_all_tables() -> GetTablesQuery;
     fn make_duckdb_connection() -> Connection {
         Connection::open(PathBuf::from("./data.duckdb")).expect("Unable to create duckdb file")
@@ -251,7 +253,7 @@ impl DatabaseOperations for SQLServer {
         }
     }
 
-    /// A Query to get all tables
+    // Write a docstring AI!
     fn get_query_all_tables() -> GetTablesQuery {
         let column_name = "table_name".into();
         let query = format!(
