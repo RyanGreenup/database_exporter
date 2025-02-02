@@ -75,6 +75,7 @@ impl From<DuckDBError> for DatabaseError {
     }
 }
 
+// Add a docstring AI!
 pub struct GetTablesQuery {
     /// The query that will return all tables for the given database
     query: String,
