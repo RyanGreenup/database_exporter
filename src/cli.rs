@@ -28,7 +28,7 @@ pub struct Cli {
     pub database: DatabaseOptions,
 
     /// Limit the number of rows exported per table
-    #[arg(default_value_t = None, long)]
+    #[arg(long)]
     pub row_limit: Option<u32>,
 }
 
