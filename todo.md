@@ -1,0 +1,7 @@
+- Don't Panic
+- Upload to Google Drive
+- Upload a sheet to Google Drive
+- Config should return hashmap
+- Run should act on all keys
+    - don't panic
+- Pass in desired output path
