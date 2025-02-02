@@ -4,3 +4,4 @@ target
 .aider.tags.cache.v3
 data
 data.duckdb
+.aider*

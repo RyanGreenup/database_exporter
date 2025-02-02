@@ -82,10 +82,8 @@ trait InternalDatabaseOperations {
         get_arrow(&self.get_connection(), None, queries).expect("Run Failed")
     }
 
-    // TODO don't panic, just drop and print to STDERR
-    // This is pretty unexpected behaviour
-    /// Returns tables as optional values
-    fn get_optional_tables(&self) -> Vec<String> {
+    /// Get the tables from the database
+    fn get_tables(&self) -> Vec<String> {
         // Some Queries
         // let queries = &[CXQuery::from("SELECT * FROM Track")];
 
@@ -120,14 +118,15 @@ trait InternalDatabaseOperations {
                 if let Some(i) = item {
                     Some(i.to_string())
                 } else {
+                    // Let the user know so it can be investigated as this is unexpected
                     eprintln!(
                         "One of the table names was not found, which is unexpected behaviour"
                     );
+                    // Filter map automatically removes None Values
                     None
                 }
             })
             .collect();
-
 
         vec_of_table_names
     }
@@ -158,11 +157,9 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     ///
     /// * `limit` - An optional limit on the number of rows to retrieve from each table.
     fn print_all_tables_as_dataframes(&self, limit: Option<u32>) {
-        for maybe_table in self.get_optional_tables() {
-            if let Some(table) = maybe_table {
-                let df = self.get_dataframe(&table, limit);
-                println!("{:#?}", df);
-            }
+        for table in self.get_tables() {
+            let df = self.get_dataframe(&table, limit);
+            println!("{:#?}", df);
         }
     }
 
@@ -189,10 +186,8 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
 
     /// Prints the names of all tables to the console.
     fn print_tables(&self) {
-        for table in self.get_optional_tables() {
-            if let Some(t) = table {
-                println!("{t}");
-            }
+        for table in self.get_tables() {
+            println!("{table}");
         }
     }
 
@@ -254,11 +249,9 @@ pub trait PublicDatabaseOperations: InternalDatabaseOperations {
     fn export_dataframes(&self, limit: Option<u32>) {
         // Get paths to parquet files
         let parquet_paths: Vec<TableParquet> = self
-            .get_optional_tables()
+            .get_tables()
             // Consume the original vector
             .into_iter()
-            // filter_map automatically drops None
-            .filter_map(|maybe_table_name| maybe_table_name)
             // Cast to TableParquet which generates a file path
             .map(|table_name| TableParquet::new(&table_name))
             // Collect into an iterator

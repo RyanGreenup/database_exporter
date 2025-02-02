@@ -2,11 +2,14 @@ use connectorx::prelude::*;
 mod cli;
 mod config;
 mod sql_server;
+// TODO these should be merged
+mod helpers;
+mod file_helpers;
 mod postgres;
 use clap::Parser;
 use cli::Cli;
 use config::{Config, SQLEngineConfig};
-use sql_server::{DatabaseOperations, SQLServer};
+use sql_server::{PublicDatabaseOperations, SQLServer};
 use std::process;
 
 fn main() {
