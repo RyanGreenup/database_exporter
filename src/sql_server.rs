@@ -116,17 +116,16 @@ trait InternalDatabaseOperations {
     }
 }
 
-// Write a docstring AI!
+/// Creates a new instance of SQLServer with the provided configuration.
+///
+/// # Arguments
+///
+/// * `config` - The configuration for the SQL engine.
+///
+/// # Returns
+///
+/// A new instance of SQLServer.
 pub trait PublicDatabaseOperations: InternalDatabaseOperations {
-    /// Creates a new instance of SQLServer with the provided configuration.
-    ///
-    /// # Arguments
-    ///
-    /// * `config` - The configuration for the SQL engine.
-    ///
-    /// # Returns
-    ///
-    /// A new instance of SQLServer.
     fn new(config: SQLEngineConfig) -> Self
     where
         Self: Sized;
