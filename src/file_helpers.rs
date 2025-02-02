@@ -34,6 +34,10 @@ impl std::error::Error for DuckDBError {}
 /// Write parquet files to a duckdb table with an optional schema
 /// The schema will be sanitized first
 /// Removes the database first
+
+
+
+// Write a docstring AI!
 pub fn write_parquet_files_to_duckdb_table(
     parquet_paths: Vec<TableParquet>,
     schema: &str,
@@ -50,19 +54,13 @@ pub fn write_parquet_files_to_duckdb_table(
     let duckdb_conn =
         Connection::open(PathBuf::from(file_location)).map_err(DuckDBError::ConnectionError)?;
 
+    // Create the Schema if it doesn't exist
     create_schema(schema, &duckdb_conn)?;
 
     for parquet_path in parquet_paths {
         // Change into the directory
         match parquet_path.file_path.to_str() {
             Some(path_str) => {
-                // Read the parquet as a file
-                // TODO
-                // Is this expensive to open?
-                // Should we load them all in at once to simplify locking operations
-                // Yeah let's collect the paths of duckdb files that need to be loaded in
-                // then we can open once and immediately close
-
                 match duckdb_conn.execute(
                     // https://duckdb.org/docs/data/parquet/overview.html
                     &format!(
