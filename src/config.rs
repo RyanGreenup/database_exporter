@@ -4,7 +4,27 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-// Add a docstring AI!
+/// Configuration for connecting to a SQL database engine.
+///
+/// This struct holds all necessary connection parameters for various SQL database types
+/// including PostgreSQL, SQLite, and SQL Server. Different fields may be used
+/// depending on the database type (e.g., SQLite only needs the database path).
+///
+/// # Examples
+///
+/// ```
+/// use database_exporter::config::SQLEngineConfig;
+/// use database_exporter::database::types::DatabaseType;
+///
+/// let config = SQLEngineConfig {
+///     database_type: DatabaseType::Postgres,
+///     username: "postgres".to_string(),
+///     password: "postgres".to_string(),
+///     database: "mydb".to_string(),
+///     host: "localhost".to_string(),
+///     port: "5432".to_string(),
+/// };
+/// ```
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SQLEngineConfig {
     pub database_type: DatabaseType,
