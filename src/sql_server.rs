@@ -191,6 +191,7 @@ pub trait DatabaseOperations {
 }
 
 impl DatabaseOperations for SQLServer {
+    /// Returns a reference to the database connection.
     fn get_connection(&self) -> &connectorx::source_router::SourceConn {
         &self.source_conn
     }
