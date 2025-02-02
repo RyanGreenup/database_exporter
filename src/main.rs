@@ -1,4 +1,3 @@
-use connectorx::prelude::*;
 mod cli;
 mod config;
 mod sql_server;

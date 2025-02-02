@@ -90,8 +90,10 @@ impl DatabaseType {
 
 #[derive(Debug)]
 pub struct Database {
-    pub config: SQLEngineConfig, // TODO Dead but good for debugging
-    uri_string: String,          // TODO Dead Code but good for debugging
+    #[allow(dead_code)] // Dead but good for debugging
+    pub config: SQLEngineConfig,
+    #[allow(dead_code)] // Dead but good for debugging
+    uri_string: String,
     source_conn: SourceConn,
     db_type: DatabaseType,
 }
