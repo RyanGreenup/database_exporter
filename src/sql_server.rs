@@ -18,14 +18,60 @@ pub struct GetTablesQuery {
     column_name: String,
 }
 
+/// Represents different types of SQL databases and their specific query formats
+#[derive(Debug)]
+pub enum DatabaseType {
+    SQLServer,
+    PostgreSQL,
+}
+
+impl DatabaseType {
+    /// Returns the appropriate query structure for getting all tables in the database
+    pub fn get_tables_query(&self) -> GetTablesQuery {
+        match self {
+            DatabaseType::SQLServer => GetTablesQuery {
+                query: r#"
+                    SELECT TABLE_NAME as table_name
+                    FROM INFORMATION_SCHEMA.TABLES
+                    WHERE TABLE_TYPE = 'BASE TABLE' AND
+                        TABLE_SCHEMA != 'scratch';"#
+                    .to_string(),
+                column_name: "table_name".to_string(),
+            },
+            DatabaseType::PostgreSQL => GetTablesQuery {
+                query: r#"
+                    SELECT tablename as table_name
+                    FROM pg_catalog.pg_tables
+                    WHERE schemaname != 'pg_catalog' AND 
+                        schemaname != 'information_schema';"#
+                    .to_string(),
+                column_name: "table_name".to_string(),
+            },
+        }
+    }
+
+    /// Returns a query string for getting rows from a specific table
+    pub fn get_rows_query(&self, table: &str, limit: Option<u32>) -> String {
+        match self {
+            DatabaseType::SQLServer => match limit {
+                Some(n) => format!("SELECT TOP {} * FROM {}", n, table),
+                None => format!("SELECT * FROM {}", table),
+            },
+            DatabaseType::PostgreSQL => match limit {
+                Some(n) => format!("SELECT * FROM {} LIMIT {}", table, n),
+                None => format!("SELECT * FROM {}", table),
+            },
+        }
+    }
+}
+
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct SQLServer {
     pub config: SQLEngineConfig,
     pub uri_string: String,
     source_conn: SourceConn,
-    // TODO must drop this automagically
-    // duckdb_conn: Connection,
+    db_type: DatabaseType,
 }
 
 /// Provides internal operations for interacting with a SQL Server database.
@@ -273,25 +319,11 @@ impl InternalDatabaseOperations for SQLServer {
     }
 
     fn get_table_query(table: &str, limit: Option<u32>) -> String {
-        match limit {
-            Some(n) => format!("SELECT TOP {} * FROM {}", n, table),
-            None => format!("SELECT * FROM {}", table),
-        }
+        DatabaseType::SQLServer.get_rows_query(table, limit)
     }
 
     fn get_query_all_tables() -> GetTablesQuery {
-        let column_name = "table_name".into();
-        let query = format!(
-            r#"
-        SELECT TABLE_NAME as {}
-        FROM INFORMATION_SCHEMA.TABLES
-        WHERE TABLE_TYPE = 'BASE TABLE' AND
-            TABLE_SCHEMA != 'scratch';
-        "#,
-            column_name
-        );
-
-        GetTablesQuery { query, column_name }
+        DatabaseType::SQLServer.get_tables_query()
     }
 }
 
@@ -316,6 +348,7 @@ impl PublicDatabaseOperations for SQLServer {
             config,
             uri_string: uri,
             source_conn,
+            db_type: DatabaseType::SQLServer,
         }
     }
 }
