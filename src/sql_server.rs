@@ -63,7 +63,16 @@ pub trait DatabaseOperations {
         }
     }
 
-    // Write a docstring AI!
+    /// Retrieves an ArrowDestination for a given table with an optional row limit.
+    ///
+    /// # Arguments
+    ///
+    /// * `table` - The name of the table to retrieve data from.
+    /// * `limit` - An optional limit on the number of rows to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// An ArrowDestination containing the retrieved data.
     fn get_arrow_destination(&self, table: &str, limit: Option<u32>) -> ArrowDestination {
         // Build the query
         let query = match limit {
