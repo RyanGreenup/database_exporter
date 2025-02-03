@@ -4,12 +4,12 @@
 
 Sometime after commit `816dd99c3e749d429e325d838481589b7e516091` Windows support was broken, this will be difficult to fix, the features that come to mind that may have caused this:
 
+1. Stable Rust from Nightly
+2. Duckdb
+3. `src_sqlite`
+4. `src_mysql`
 
-- Export features
-    - `src_sqlite`
-    - `src_mysql`
-- Nightly Build Chain
-- DuckDB
+We will need to remove 4 -> 3 -> 2 -> 1 until compilation is restored, then add features 2 -> 3 -> 4 back in.
 
 ## SQLite Types
 
