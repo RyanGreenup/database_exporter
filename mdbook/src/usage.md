@@ -9,7 +9,11 @@ This tool requires a config file to describe the databases details and then uses
 The CLI provides a `--help` which should be sufficiently clear, generally the recipe is:
 
 ```sh
-cargo run -- -c ~/.config/database_exporter/config.toml
+# From Source
+cargo run -- -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
+
+# From Binary
+./database-export -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
 ```
 
 ## Config File

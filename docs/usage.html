@@ -421,7 +421,11 @@
 <p>This tool requires a config file to describe the databases details and then uses cli options to describe the target format.</p>
 <h2 id="cli"><a class="header" href="#cli">CLI</a></h2>
 <p>The CLI provides a <code>--help</code> which should be sufficiently clear, generally the recipe is:</p>
-<pre><code class="language-sh">cargo run -- -c ~/.config/database_exporter/config.toml
+<pre><code class="language-sh"># From Source
+cargo run -- -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
+
+# From Binary
+./database-export -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
 </code></pre>
 <h2 id="config-file"><a class="header" href="#config-file">Config File</a></h2>
 <h3 id="overview-1"><a class="header" href="#overview-1">Overview</a></h3>
