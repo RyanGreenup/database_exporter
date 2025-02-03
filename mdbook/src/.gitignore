@@ -1,0 +1,25 @@
+.gitbak
+*.tmp
+.bleve_index
+_minted-*
+**/texfrag/
+**/neovide_backtraces.log
+
+# Don't ignore these because we want to catch them
+# *~1~
+# *~2~
+# *~3~
+# *~4~
+# *~5~
+# *~6~
+# *~7~
+# *~8~
+# *~9~
+# *~10~
+# *sync-conflict-2023*
+# *sync-conflict-2024*
+# *sync-conflict-2025*
+# *sync-conflict-2026*
+# *sync-conflict-2027*
+# *sync-conflict-2028*
+# *sync-conflict-2029*
