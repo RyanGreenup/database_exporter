@@ -3,9 +3,9 @@ pub mod types;
 use crate::cli::DuckDBExportOptions;
 use crate::config::SQLEngineConfig;
 #[cfg(feature = "duckdb")]
-use crate::file_helpers::DuckDBError;
-#[cfg(feature = "duckdb")]
 use crate::file_helpers::write_parquet_files_to_duckdb_table;
+#[cfg(feature = "duckdb")]
+use crate::file_helpers::DuckDBError;
 use crate::helpers::TableParquet;
 use connectorx::destinations::arrow::ArrowDestinationError;
 use connectorx::prelude::*;

@@ -31,12 +31,10 @@ pub struct Cli {
     #[arg(long)]
     pub row_limit: Option<u32>,
 
-
     /// Run as a service, periodically fetching data (seconds)
     #[arg(long)]
-    pub delay: Option<u32>
+    pub delay: Option<u32>,
 }
-
 
 #[derive(Parser, Debug)]
 pub struct DatabaseOptions {
@@ -50,8 +48,7 @@ pub struct DatabaseOptions {
 
     /// Custom separator to use instead of schemas in database
     #[arg(long)]
-    separator: Option<String>
-
+    separator: Option<String>,
 }
 
 #[derive(Debug, Clone)]

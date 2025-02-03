@@ -1,4 +1,3 @@
-
 #[cfg(feature = "duckdb")]
 use crate::helpers::TableParquet;
 #[cfg(feature = "duckdb")]
