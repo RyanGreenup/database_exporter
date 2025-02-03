@@ -1,7 +1,12 @@
+
+#[cfg(feature = "duckdb")]
 use crate::helpers::TableParquet;
+#[cfg(feature = "duckdb")]
 use duckdb::Connection;
+#[cfg(feature = "duckdb")]
 use std::path::{Path, PathBuf};
 
+#[cfg(feature = "duckdb")]
 #[derive(Debug)]
 pub enum DuckDBError {
     ConnectionError(duckdb::Error),
@@ -9,6 +14,7 @@ pub enum DuckDBError {
     InvalidPathError(String),
 }
 
+#[cfg(feature = "duckdb")]
 impl std::fmt::Display for DuckDBError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -20,6 +26,7 @@ impl std::fmt::Display for DuckDBError {
     }
 }
 
+#[cfg(feature = "duckdb")]
 impl std::error::Error for DuckDBError {}
 
 /// Writes multiple Parquet files to tables in a DuckDB database.
@@ -59,6 +66,7 @@ impl std::error::Error for DuckDBError {}
 /// hit the database again to get the data or cache to disk.
 /// Given that parquet is already well integrated with duckdb, it's simpler
 /// to offload that task to duckdb rather than handle it inernally.
+#[cfg(feature = "duckdb")]
 pub fn write_parquet_files_to_duckdb_table(
     parquet_paths: Vec<TableParquet>,
     schema: &str,
@@ -119,6 +127,7 @@ pub fn write_parquet_files_to_duckdb_table(
     Ok(())
 }
 
+#[cfg(feature = "duckdb")]
 pub fn create_schema(schema: &str, conn: &Connection) -> Result<(), DuckDBError> {
     let schema = &sanitize_schema(schema);
 
@@ -175,6 +184,7 @@ pub fn create_schema(schema: &str, conn: &Connection) -> Result<(), DuckDBError>
 /// let sanitized = sanitize_schema("");
 /// assert_eq!(sanitized, "schema");
 /// ```
+#[cfg(feature = "duckdb")]
 pub fn sanitize_schema(schema: &str) -> String {
     let sanitized: String = schema
         .chars()
@@ -216,6 +226,7 @@ pub fn sanitize_schema(schema: &str) -> String {
 /// remove_database(&db_path)?; // Removes if exists, does nothing if not found
 /// ```
 #[allow(dead_code)]
+#[cfg(feature = "duckdb")]
 pub fn remove_database(file_location: &Path) -> Result<(), DuckDBError> {
     // Remove the database if it exists
     match std::fs::remove_file(file_location) {

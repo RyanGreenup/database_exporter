@@ -421,6 +421,9 @@
 <h3 id="generally"><a class="header" href="#generally">Generally</a></h3>
 <pre><code class="language-sh">cargo run -- -c ~/.config/database_exporter/config_local2.toml --help
 </code></pre>
+<p>On all major operating systems, except Windows, there is support for automatically creating a <code>database.duckdb</code>:</p>
+<pre><code>cargo build --release --features "duckdb"
+</code></pre>
 <h3 id="windows"><a class="header" href="#windows">Windows</a></h3>
 <p>If compiling for windows using the GNU target, it's necessary to use an optimized build, it seems some issues are inlined away this way:</p>
 <div class="mdbook-callouts mdbook-callouts-note">
@@ -430,6 +433,17 @@
 </p>
 <p>Database Exporter is developed in an Arch Based Docker container using <a href="https://github.com/89luca89/distrobox">Distrobox</a></p>
 </div>
+<div class="mdbook-callouts mdbook-callouts-warning">
+<p class="mdbook-callouts-title">
+  <span class="mdbook-callouts-icon"></span>
+  warning
+</p>
+<p>Windows <strong>must</strong> compile:</p>
+<ul>
+<li>Without the "duckdb" feature, and</li>
+<li>With <code>--release</code> optimizations</li>
+</ul>
+</div>
 <pre><code class="language-sh"># Add the Windows Target
 rustup target add x86_64-pc-windows-gnu
 
@@ -437,7 +451,7 @@ rustup target add x86_64-pc-windows-gnu
 sudo pacman -S extra/mingw-w64-gcc
 
 # Compile
-cargo build --target x86_64-pc-windows-gnu --release
+cargo build --target x86_64-pc-windows-gnu --no-default-features --release
 </code></pre>
 <p>If this does not build, consider trying:</p>
 <pre><code class="language-sh">rustup target add x86_64-pc-windows-msvc

@@ -2,14 +2,26 @@
 
 ## Windows Support
 
-Sometime after commit `816dd99c3e749d429e325d838481589b7e516091` Windows support was broken, this will be difficult to fix, the features that come to mind that may have caused this:
+Duckdb is not supported on Windows [^1738559984], as a result the feature is locked behind the `"duckdb"` feature flag.
 
-1. Stable Rust from Nightly
-2. Duckdb
-3. `src_sqlite`
-4. `src_mysql`
+[^1738559984]: I'm not sure why, PR's welcome, GDB returns the following (seems like a `.dll` issue):
+    ```sh
+    gdb .\extract_to_sqlite_rs.exe
+    run
+    bt
+    ```
+    ```
+    During startup program exited with code `0xc0000135`
+    ```
 
-We will need to remove 4 -> 3 -> 2 -> 1 until compilation is restored, then add features 2 -> 3 -> 4 back in.
+    I have tried:
+
+    ```sh
+    winget install DuckDB.cli
+    scoop install duckdb
+    ```
+
+    However, it did not help
 
 ## SQLite Types
 

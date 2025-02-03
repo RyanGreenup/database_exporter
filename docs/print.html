@@ -969,6 +969,9 @@ pub enum DatabaseType {
 <h3 id="generally"><a class="header" href="#generally">Generally</a></h3>
 <pre><code class="language-sh">cargo run -- -c ~/.config/database_exporter/config_local2.toml --help
 </code></pre>
+<p>On all major operating systems, except Windows, there is support for automatically creating a <code>database.duckdb</code>:</p>
+<pre><code>cargo build --release --features "duckdb"
+</code></pre>
 <h3 id="windows"><a class="header" href="#windows">Windows</a></h3>
 <p>If compiling for windows using the GNU target, it's necessary to use an optimized build, it seems some issues are inlined away this way:</p>
 <div class="mdbook-callouts mdbook-callouts-note">
@@ -978,6 +981,17 @@ pub enum DatabaseType {
 </p>
 <p>Database Exporter is developed in an Arch Based Docker container using <a href="https://github.com/89luca89/distrobox">Distrobox</a></p>
 </div>
+<div class="mdbook-callouts mdbook-callouts-warning">
+<p class="mdbook-callouts-title">
+  <span class="mdbook-callouts-icon"></span>
+  warning
+</p>
+<p>Windows <strong>must</strong> compile:</p>
+<ul>
+<li>Without the "duckdb" feature, and</li>
+<li>With <code>--release</code> optimizations</li>
+</ul>
+</div>
 <pre><code class="language-sh"># Add the Windows Target
 rustup target add x86_64-pc-windows-gnu
 
@@ -985,7 +999,7 @@ rustup target add x86_64-pc-windows-gnu
 sudo pacman -S extra/mingw-w64-gcc
 
 # Compile
-cargo build --target x86_64-pc-windows-gnu --release
+cargo build --target x86_64-pc-windows-gnu --no-default-features --release
 </code></pre>
 <p>If this does not build, consider trying:</p>
 <pre><code class="language-sh">rustup target add x86_64-pc-windows-msvc
@@ -2044,14 +2058,21 @@ services:
 </style>
 <h1 id="limitations"><a class="header" href="#limitations">Limitations</a></h1>
 <h2 id="windows-support"><a class="header" href="#windows-support">Windows Support</a></h2>
-<p>Sometime after commit <code>816dd99c3e749d429e325d838481589b7e516091</code> Windows support was broken, this will be difficult to fix, the features that come to mind that may have caused this:</p>
-<ol>
-<li>Stable Rust from Nightly</li>
-<li>Duckdb</li>
-<li><code>src_sqlite</code></li>
-<li><code>src_mysql</code></li>
-</ol>
-<p>We will need to remove 4 -&gt; 3 -&gt; 2 -&gt; 1 until compilation is restored, then add features 2 -&gt; 3 -&gt; 4 back in.</p>
+<p>Duckdb is not supported on Windows <sup class="footnote-reference"><a href="#1738559984">1</a></sup>, as a result the feature is locked behind the <code>"duckdb"</code> feature flag.</p>
+<div class="footnote-definition" id="1738559984"><sup class="footnote-definition-label">1</sup>
+<p>I'm not sure why, PR's welcome, GDB returns the following (seems like a <code>.dll</code> issue):</p>
+<pre><code class="language-sh">gdb .\extract_to_sqlite_rs.exe
+run
+bt
+</code></pre>
+<pre><code>During startup program exited with code `0xc0000135`
+</code></pre>
+<p>I have tried:</p>
+<pre><code class="language-sh">winget install DuckDB.cli
+scoop install duckdb
+</code></pre>
+<p>However, it did not help</p>
+</div>
 <h2 id="sqlite-types"><a class="header" href="#sqlite-types">SQLite Types</a></h2>
 <p>I've had some issues with the <code>NUMERIC</code> type in SQLite, this causes Rusqlite to pass an error up to Connector-X like so:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]

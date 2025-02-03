@@ -1,9 +1,12 @@
 pub mod types;
 
 use crate::cli::DuckDBExportOptions;
+use crate::config::SQLEngineConfig;
+#[cfg(feature = "duckdb")]
+use crate::file_helpers::DuckDBError;
+#[cfg(feature = "duckdb")]
 use crate::file_helpers::write_parquet_files_to_duckdb_table;
 use crate::helpers::TableParquet;
-use crate::{config::SQLEngineConfig, file_helpers::DuckDBError};
 use connectorx::destinations::arrow::ArrowDestinationError;
 use connectorx::prelude::*;
 use polars::error::PolarsError;
@@ -26,6 +29,7 @@ pub enum DatabaseError {
     DataFrameError(ArrowDestinationError),
     PolarsError(PolarsError),
     IoError(std::io::Error),
+    #[cfg(feature = "duckdb")]
     DuckDBError(DuckDBError),
 }
 
@@ -36,6 +40,7 @@ impl std::fmt::Display for DatabaseError {
             DatabaseError::DataFrameError(e) => write!(f, "DataFrame error: {e}"),
             DatabaseError::PolarsError(e) => write!(f, "Polars error: {e}"),
             DatabaseError::IoError(e) => write!(f, "IO Error: {e}"),
+            #[cfg(feature = "duckdb")]
             DatabaseError::DuckDBError(e) => {
                 write!(f, "Error Loading Parquet Files into DuckDB: {e}")
             }
@@ -69,6 +74,7 @@ impl From<std::io::Error> for DatabaseError {
     }
 }
 
+#[cfg(feature = "duckdb")]
 impl From<DuckDBError> for DatabaseError {
     fn from(error: DuckDBError) -> Self {
         DatabaseError::DuckDBError(error)
@@ -342,7 +348,7 @@ impl Database {
         limit: Option<u32>,
         export_directory: &Path,
         duckdb_options: Option<&DuckDBExportOptions>,
-        schema: &str,
+        #[allow(unused_variables)] schema: &str,
     ) -> Result<(), DatabaseError> {
         // Get paths to parquet files
         let parquet_paths: Vec<TableParquet> = self
@@ -361,14 +367,22 @@ impl Database {
             }
         }
 
+        #[allow(unused_variables)]
         if let Some(opts) = duckdb_options {
-            // Write to duckdb
-            write_parquet_files_to_duckdb_table(
-                writable_parquet_paths,
-                schema,
-                &export_directory.join(opts.file_name.clone()),
-                opts.separator.as_deref(),
-            )?;
+            if cfg!(feature = "duckdb") {
+                #[cfg(feature = "duckdb")]
+                {
+                    // Write to duckdb
+                    write_parquet_files_to_duckdb_table(
+                        writable_parquet_paths,
+                        schema,
+                        &export_directory.join(opts.file_name.clone()),
+                        opts.separator.as_deref(),
+                    )?;
+                }
+            }
+        } else {
+            println!("Duckdb Feature is Disabled, No database created");
         }
         Ok(())
     }

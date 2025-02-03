@@ -14,7 +14,7 @@ directories = "6.0.0"
 serde = { version = "1.0.217", features = ["derive", "serde_derive"] }
 
 # The version of polars in duckdb is too old (0.35) so we can't use it.
-duckdb = { version = "1.1.1", features = ["parquet"] }
+duckdb = { version = "1.1.1", features = ["parquet"], optional = true}
 # polars-core MUST match between both in order to pass the dataframe to the polars parquet writer,
 # inspect the tree with:
 # cargo tree | grep polars-core
@@ -28,3 +28,9 @@ duckdb = { version = "1.1.1", features = ["parquet"] }
 
 # [target.x86_64-pc-windows-gnu]
 # rustflags = ["-C", "target-feature=+crt-static"]
+
+
+
+
+[features]
+duckdb = ["dep:duckdb"]
