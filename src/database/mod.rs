@@ -1,9 +1,7 @@
 pub mod types;
 
 use crate::cli::DuckDBExportOptions;
-use crate::file_helpers::write_parquet_files_to_duckdb_table;
 use crate::helpers::TableParquet;
-use crate::{config::SQLEngineConfig, file_helpers::DuckDBError};
 use connectorx::destinations::arrow::ArrowDestinationError;
 use connectorx::prelude::*;
 use polars::error::PolarsError;
@@ -11,6 +9,7 @@ use polars::frame::DataFrame;
 use polars::prelude::ParquetWriter;
 use std::path::Path;
 use types::DatabaseType;
+use crate::SQLEngineConfig;
 
 /// Represents errors that can occur during database operations.
 ///
@@ -26,7 +25,7 @@ pub enum DatabaseError {
     DataFrameError(ArrowDestinationError),
     PolarsError(PolarsError),
     IoError(std::io::Error),
-    DuckDBError(DuckDBError),
+    // DuckDBError(DuckDBError),
 }
 
 impl std::fmt::Display for DatabaseError {
@@ -36,9 +35,9 @@ impl std::fmt::Display for DatabaseError {
             DatabaseError::DataFrameError(e) => write!(f, "DataFrame error: {e}"),
             DatabaseError::PolarsError(e) => write!(f, "Polars error: {e}"),
             DatabaseError::IoError(e) => write!(f, "IO Error: {e}"),
-            DatabaseError::DuckDBError(e) => {
-                write!(f, "Error Loading Parquet Files into DuckDB: {e}")
-            }
+            // DatabaseError::DuckDBError(e) => {
+            //     write!(f, "Error Loading Parquet Files into DuckDB: {e}")
+            // }
         }
     }
 }
@@ -69,11 +68,11 @@ impl From<std::io::Error> for DatabaseError {
     }
 }
 
-impl From<DuckDBError> for DatabaseError {
-    fn from(error: DuckDBError) -> Self {
-        DatabaseError::DuckDBError(error)
-    }
-}
+// impl From<DuckDBError> for DatabaseError {
+//     fn from(error: DuckDBError) -> Self {
+//         DatabaseError::DuckDBError(error)
+//     }
+// }
 
 /// Represents a query for retrieving table information from a database.
 ///
@@ -361,15 +360,15 @@ impl Database {
             }
         }
 
-        if let Some(opts) = duckdb_options {
-            // Write to duckdb
-            write_parquet_files_to_duckdb_table(
-                writable_parquet_paths,
-                schema,
-                &export_directory.join(opts.file_name.clone()),
-                opts.separator.as_deref(),
-            )?;
-        }
+        // if let Some(opts) = duckdb_options {
+        //     // Write to duckdb
+        //     write_parquet_files_to_duckdb_table(
+        //         writable_parquet_paths,
+        //         schema,
+        //         &export_directory.join(opts.file_name.clone()),
+        //         opts.separator.as_deref(),
+        //     )?;
+        // }
         Ok(())
     }
 
