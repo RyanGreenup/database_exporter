@@ -15,4 +15,4 @@ run:
 
 docs:
     cd mdbook && \
-    mdbook build  -d docs/
+    mdbook build  -d ../docs/
