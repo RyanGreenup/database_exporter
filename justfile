@@ -12,3 +12,7 @@ vulture:
 
 run:
     cargo run -- -c ~/.config/database_exporter/config_local2.toml
+
+docs:
+    cd mdbook && \
+    mdbook build  -d docs/
