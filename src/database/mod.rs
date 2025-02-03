@@ -354,7 +354,7 @@ impl Database {
         let parquet_paths: Vec<TableParquet> = self
             .get_tables()?
             .into_iter()
-            .map(|table_name| TableParquet::new(&table_name, export_directory))
+            .map(|table_name| TableParquet::new(&table_name, export_directory, schema))
             .collect();
 
         let mut writable_parquet_paths: Vec<TableParquet> = Vec::with_capacity(parquet_paths.len());

@@ -184,7 +184,6 @@ pub fn create_schema(schema: &str, conn: &Connection) -> Result<(), DuckDBError>
 /// let sanitized = sanitize_schema("");
 /// assert_eq!(sanitized, "schema");
 /// ```
-#[cfg(feature = "duckdb")]
 pub fn sanitize_schema(schema: &str) -> String {
     let sanitized: String = schema
         .chars()
