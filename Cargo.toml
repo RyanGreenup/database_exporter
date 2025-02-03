@@ -1,8 +1,8 @@
 [package]
 name = "extract_to_sqlite_rs"
 version = "0.1.0"
-edition = "2024" # Nightly
-# edition = "2021" # Stable
+# edition = "2024" # Nightly
+edition = "2021" # Stable
 
 [dependencies]
 polars-core = "0.45.1"
