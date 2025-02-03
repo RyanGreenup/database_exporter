@@ -73,16 +73,16 @@ fn run_and_watch(
             std::thread::sleep(Duration::from_secs(t.into()));
         },
     }
-    for (name, config) in configs {
-        println!("Processing database: {}", name);
-
-        let db = Database::new(config.clone(), config.database_type);
-
-        match db.export_dataframes(row_limit, export_directory, duckdb_options, &name) {
-            Ok(_) => {}
-            Err(e) => eprintln!("{e}"),
-        }
-    }
+    // for (name, config) in configs {
+    //     println!("Processing database: {}", name);
+    //
+    //     let db = Database::new(config.clone(), config.database_type);
+    //
+    //     match db.export_dataframes(row_limit, export_directory, duckdb_options, &name) {
+    //         Ok(_) => {}
+    //         Err(e) => eprintln!("{e}"),
+    //     }
+    // }
 }
 
 
