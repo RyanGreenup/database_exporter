@@ -9,3 +9,6 @@ machete:
 vulture:
     # cargo install cargo-machete
     just machete
+
+run:
+    cargo run -- -c ~/.config/database_exporter/config_local2.toml

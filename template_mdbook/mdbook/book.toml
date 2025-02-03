@@ -1,0 +1,91 @@
+[book]
+authors = ["Ryan G"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Database Exporter"
+
+# For Admonitions
+# https://github.com/tommilligan/mdbook-admonish
+# [preprocessor.admonish]
+# after = ["links"]
+# command = "mdbook-admonish"
+# assets_version = "2.0.2" # do not edit: managed by `mdbook-admonish install`
+
+# For Mermad
+# https://github.com/badboy/mdbook-mermaid
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[output.html]
+additional-js = ["mermaid.min.js", "mermaid-init.js"]
+additional-css = ["./mdbook-admonish.css", "./theme/catppuccin.css", "./theme/catppuccin-admonish.css"]
+
+# For KaTeX
+# https://github.com/SichangHe/mdbook_katex_static_css
+[preprocessor.katex]
+after = ["links"]
+# KaTeX options.
+output = "html"
+leqno = false
+fleqn = true
+throw-on-error = true
+error-color = "#cc0000"
+min-rule-thickness = -1.0
+max-size = "Infinity"
+max-expand = 1000
+trust = false
+# Extra options.
+no-css = false
+include-src = false
+block-delimiter = { left = "$$", right = "$$" }
+inline-delimiter = { left = "$", right = "$" }
+
+
+# [preprocessor.backlinks]
+# after = ["links"]
+# command = "mdbook-backlinks"
+
+
+[preprocessor.callouts]
+
+# [preprocessor.wikilinks]
+# after = ["links"]
+# command = "mdbook-wikilinks"
+
+[preprocessor.backlinks]
+command = "./mdbook-backlinks.py"
+
+
+# cargo install mdbook-yml-header
+[preprocessor.yml-header]
+
+
+[preprocessor.toc]
+command = "mdbook-toc"
+renderer = ["html"]
+max-level = 4
+
+
+
+## Run the following commands to create a new mdbook based on this book.toml
+##
+## cargo install mdbook-katex mdbook-mermaid kdbook-admonish mdbook-catppuccin
+## mdbook-admonish install
+## mdbook-mermaid  install
+## mdbook-catppuccin install
+##
+
+# ```admonish warning title="Some Title"
+# A beautifully styled message.
+# ```
+# admonitions warning, success, info, note, tip, bug
+# admonition options, title=..., collapsible=...
+# use tildes to include code
+
+# $$
+# \int^b_a 4x^3 \mathrm{d}x
+# $$
+
+
+# cargo install mdbook-catppuccin
