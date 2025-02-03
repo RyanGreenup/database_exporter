@@ -2043,6 +2043,18 @@ services:
 }
 </style>
 <h1 id="limitations"><a class="header" href="#limitations">Limitations</a></h1>
+<h2 id="windows-support"><a class="header" href="#windows-support">Windows Support</a></h2>
+<p>Sometime after commit <code>816dd99c3e749d429e325d838481589b7e516091</code> Windows support was broken, this will be difficult to fix, the features that come to mind that may have caused this:</p>
+<ul>
+<li>Export features
+<ul>
+<li><code>src_sqlite</code></li>
+<li><code>src_mysql</code></li>
+</ul>
+</li>
+<li>Nightly Build Chain</li>
+<li>DuckDB</li>
+</ul>
 <h2 id="sqlite-types"><a class="header" href="#sqlite-types">SQLite Types</a></h2>
 <p>I've had some issues with the <code>NUMERIC</code> type in SQLite, this causes Rusqlite to pass an error up to Connector-X like so:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]

@@ -1,8 +1,8 @@
 [package]
 name = "extract_to_sqlite_rs"
 version = "0.1.0"
-# edition = "2024" # Nightly
-edition = "2021" # Stable
+edition = "2024" # Nightly
+# edition = "2021" # Stable
 
 [dependencies]
 polars-core = "0.45.1"
@@ -21,5 +21,10 @@ duckdb = { version = "1.1.1", features = ["parquet"] }
 # And identify the lowest common denominator
 
 # This may cause grief but should be faster
-[build]
-rustflags = ["-Z", "threads=8"]
+# [build]
+# rustflags = ["-Z", "threads=8"]
+
+
+
+# [target.x86_64-pc-windows-gnu]
+# rustflags = ["-C", "target-feature=+crt-static"]

@@ -1,5 +1,16 @@
 # Limitations
 
+## Windows Support
+
+Sometime after commit `816dd99c3e749d429e325d838481589b7e516091` Windows support was broken, this will be difficult to fix, the features that come to mind that may have caused this:
+
+
+- Export features
+    - `src_sqlite`
+    - `src_mysql`
+- Nightly Build Chain
+- DuckDB
+
 ## SQLite Types
 
 I've had some issues with the `NUMERIC` type in SQLite, this causes Rusqlite to pass an error up to Connector-X like so:
