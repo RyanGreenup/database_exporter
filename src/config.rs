@@ -76,7 +76,13 @@ pub struct SQLEngineConfig {
     pub host: String,
     pub port: String,
     #[serde(default)]
-    pub override_limits: Option<HashMap<String, TableLimit>>,
+    override_limits: Option<HashMap<String, TableLimit>>,
+}
+
+impl SQLEngineConfig {
+    // Implement this method. If TableLimit is -1 it should be None otherwise wrap in Some AI!
+    pub fn get_override_limits(&self) -> Option<HashMap<String, Option<u32>>> {
+    }
 }
 
 impl SQLEngineConfig {
