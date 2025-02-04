@@ -434,9 +434,6 @@ cargo run -- -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/ra
 # From Binary
 ./database-export -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
 </code></pre>
-<p>To run in the background and watch files, adapt the config as described below and then:</p>
-<pre><code class="language-sh">database_exporter.exe --row-limit=1000 -c config.toml
-</code></pre>
 <h2 id="config-file"><a class="header" href="#config-file">Config File</a></h2>
 <div class="mdbook-callouts mdbook-callouts-note">
 <p class="mdbook-callouts-title">
@@ -545,6 +542,38 @@ pub enum DatabaseType {
 }
 <span class="boring">}</span></code></pre></pre>
 <p>So, for example, <code>Postgres</code> would correspond to <code>database_type=postgres</code>.</p>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="data-fetching"><a class="header" href="#data-fetching">Data Fetching</a></h3>
+<p>This is the config that I'm using in our data analysis pipeline:</p>
+<pre><code class="language-sh">database_exporter.exe --row-limit=1000 -c config.toml
+</code></pre>
+<pre><code class="language-toml">["SQL Server"]
+username = "Ryan.greenup"
+password = "xxxxxxxx"
+database = "xxxxxxxx"
+host = "xxxxxxxx"
+port = "1433"
+database_type = "sqlserver"
+
+["SQL Server".override_limits]
+# We want full timetable
+"timetable" = 0
+
+["SQL Server".custom_queries]("SQL Server".custom_queries.md)
+name = "timetable"
+description = "Full Timetable"
+query = "SELECT * FROM timetable"
+
+
+[postgres]
+username = "xxxxxxxx"
+password = "xxxxxxxx"
+database = "xxxxxxxx"
+host = "xxxxxxxx"
+port = "5432"
+database_type="postgres"
+
+</code></pre>
 
                     </main>
 

@@ -19,12 +19,6 @@ cargo run -- -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/ra
 ./database-export -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
 ```
 
-To run in the background and watch files, adapt the config as described below and then:
-
-```sh
-database_exporter.exe --row-limit=1000 -c config.toml
-```
-
 
 ## Config File
 > [!NOTE]
@@ -137,3 +131,46 @@ pub enum DatabaseType {
 ```
 
 So, for example, `Postgres` would correspond to `database_type=postgres`.
+
+
+## Examples
+
+### Data Fetching
+
+
+This is the config that I'm using in our data analysis pipeline:
+
+```sh
+database_exporter.exe --row-limit=1000 -c config.toml
+```
+
+```toml
+["SQL Server"]
+username = "Ryan.greenup"
+password = "xxxxxxxx"
+database = "xxxxxxxx"
+host = "xxxxxxxx"
+port = "1433"
+database_type = "sqlserver"
+
+["SQL Server".override_limits]
+# We want full timetable
+"timetable" = 0
+
+[["SQL Server".custom_queries]]
+name = "timetable"
+description = "Full Timetable"
+query = "SELECT * FROM timetable"
+
+
+[postgres]
+username = "xxxxxxxx"
+password = "xxxxxxxx"
+database = "xxxxxxxx"
+host = "xxxxxxxx"
+port = "5432"
+database_type="postgres"
+
+```
+
+
