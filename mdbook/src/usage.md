@@ -19,6 +19,13 @@ cargo run -- -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/ra
 ./database-export -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
 ```
 
+To run in the background and watch files, adapt the config as described below and then:
+
+```sh
+database_exporter.exe --row-limit=1000 -c config.toml
+```
+
+
 ## Config File
 > [!NOTE]
 > The config file is TOML due to it's excellent support in Rust and human-friendly syntax

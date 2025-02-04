@@ -434,6 +434,9 @@ cargo run -- -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/ra
 # From Binary
 ./database-export -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
 </code></pre>
+<p>To run in the background and watch files, adapt the config as described below and then:</p>
+<pre><code class="language-sh">database_exporter.exe --row-limit=1000 -c config.toml
+</code></pre>
 <h2 id="config-file"><a class="header" href="#config-file">Config File</a></h2>
 <div class="mdbook-callouts mdbook-callouts-note">
 <p class="mdbook-callouts-title">
