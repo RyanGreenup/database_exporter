@@ -364,9 +364,13 @@ impl Database {
         let writable_parquet_paths: Vec<TableParquet> = parquet_paths
             .par_iter()
             .filter_map(|tp| {
-                // If the override_limits is some and the tp.table_name is a valid key
-                // Modify the value of limit AI!
-                let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, limit) {
+                // Get the table-specific limit if it exists, otherwise use the default limit
+                let table_limit = override_limits
+                    .as_ref()
+                    .and_then(|limits| limits.get(&tp.table_name))
+                    .unwrap_or(limit);
+
+                let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, table_limit) {
                     Ok(_) => Some(tp.clone()),
                     Err(e) => {
                         eprintln!("{e}");
