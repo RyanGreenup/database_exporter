@@ -369,7 +369,8 @@ impl Database {
                 let row_limit = override_limits
                     .as_ref()
                     .and_then(|limits| limits.get(&tp.table_name))
-                    .unwrap_or(limit);
+                    .copied()  // Convert &Option<u32> to Option<u32>
+                    .unwrap_or_else(|| limit);
 
                 // Try (/ Catch) to write the table to a parquet file
                 let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, row_limit) {
