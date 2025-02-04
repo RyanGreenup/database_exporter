@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+// Improve this so the value can only be -1 or any u32 value AI!
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TableLimit(i32);
 
@@ -44,7 +45,7 @@ pub struct SQLEngineConfig {
     pub host: String,
     pub port: String,
     #[serde(default)]
-    pub override_limits: HashMap<String, TableLimit>,
+    pub override_limits: Option<HashMap<String, TableLimit>>,
 }
 
 impl SQLEngineConfig {
@@ -65,7 +66,7 @@ impl SQLEngineConfig {
                 database: "/database.sqlite".to_string(),
                 host: String::new(),
                 port: String::new(),
-                override_limits: sqlite_limits,
+                override_limits: Some(sqlite_limits),
             },
         );
 
@@ -79,7 +80,7 @@ impl SQLEngineConfig {
                 database: String::new(),
                 host: "localhost".to_string(),
                 port: "5432".to_string(),
-                override_limits: HashMap::new(),
+                override_limits: None,
             },
         );
 
@@ -93,9 +94,10 @@ impl SQLEngineConfig {
                 database: "chinook".to_string(),
                 host: "localhost".to_string(),
                 port: "1433".to_string(),
-                override_limits: HashMap::new(),
+                override_limits: None,
             },
         );
+        println!("{:#?}", default_config);
 
         default_config
     }
