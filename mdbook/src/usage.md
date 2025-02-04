@@ -75,6 +75,40 @@ If one wants to Override the limit for certain tables, this can be specified in 
 
 In this example the `resources` table will only return 10 rows, however, the "
 
+### Custom Queries
+
+One can include custom queries like so:
+
+```toml
+\[["Joplin SQLite Database".custom_queries]\]
+name = "00_test"
+description = "A Test Query"
+query = "SELECT id FROM notes"
+
+\[["Joplin SQLite Database".custom_queries]\]
+name = "01_test"
+description = "A Test Query"
+query = "SELECT body FROM notes"
+```
+
+This will result in two new parquet files: `00_test.parquet` and `01_test.parquet`. This can be useful where the user needs only the most recent data or only an inner join on data, for example the following will return the 10 most recent results:
+
+> [!NOTE]
+> Both queries will run, however custom queries run second and clobber any created file.
+
+
+```toml
+["Joplin SQLite Database".override_limits]
+"resources" = 0   # Grab Nothing
+
+\[["Joplin SQLite Database".custom_queries]\]
+name = "resources"
+description = "Get the 10 most recent resources"
+query = "SELECT * FROM resources ORDER BY user_updated_time DESC LIMIT 10"
+
+```
+
+
 
 ### Parameters
 #### Database Types

@@ -736,6 +736,35 @@ port=""
 "tags" = -1       # Return all Rows
 </code></pre>
 <p>In this example the <code>resources</code> table will only return 10 rows, however, the "</p>
+<h3 id="custom-queries"><a class="header" href="#custom-queries">Custom Queries</a></h3>
+<p>One can include custom queries like so:</p>
+<pre><code class="language-toml">\[["Joplin SQLite Database".custom_queries]\]
+name = "00_test"
+description = "A Test Query"
+query = "SELECT id FROM notes"
+
+\[["Joplin SQLite Database".custom_queries]\]
+name = "01_test"
+description = "A Test Query"
+query = "SELECT body FROM notes"
+</code></pre>
+<p>This will result in two new parquet files: <code>00_test.parquet</code> and <code>01_test.parquet</code>. This can be useful where the user needs only the most recent data or only an inner join on data, for example the following will return the 10 most recent results:</p>
+<div class="mdbook-callouts mdbook-callouts-note">
+<p class="mdbook-callouts-title">
+  <span class="mdbook-callouts-icon"></span>
+  note
+</p>
+<p>Both queries will run, however custom queries run second and clobber any created file.</p>
+</div>
+<pre><code class="language-toml">["Joplin SQLite Database".override_limits]
+"resources" = 0   # Grab Nothing
+
+\[["Joplin SQLite Database".custom_queries]\]
+name = "resources"
+description = "Get the 10 most recent resources"
+query = "SELECT * FROM resources ORDER BY user_updated_time DESC LIMIT 10"
+
+</code></pre>
 <h3 id="parameters"><a class="header" href="#parameters">Parameters</a></h3>
 <h4 id="database-types"><a class="header" href="#database-types">Database Types</a></h4>
 <p>The available <code>database_types</code> are limited by the available <a href="https://github.com/sfu-db/connector-x?tab=readme-ov-file#sources">connector-x sources</a>, currently implemented is:</p>
