@@ -80,8 +80,20 @@ pub struct SQLEngineConfig {
 }
 
 impl SQLEngineConfig {
-    // Implement this method. If TableLimit is -1 it should be None otherwise wrap in Some AI!
     pub fn get_override_limits(&self) -> Option<HashMap<String, Option<u32>>> {
+        self.override_limits.as_ref().map(|limits| {
+            limits
+                .iter()
+                .map(|(k, v)| {
+                    let limit = if v.0 == -1 {
+                        None
+                    } else {
+                        Some(v.0 as u32)
+                    };
+                    (k.clone(), limit)
+                })
+                .collect()
+        })
     }
 }
 
