@@ -14,6 +14,7 @@ use polars::export::rayon::iter::IntoParallelRefIterator;
 use polars::export::rayon::iter::ParallelIterator;
 use polars::frame::DataFrame;
 use polars::prelude::ParquetWriter;
+use std::collections::HashMap;
 use std::path::Path;
 use types::DatabaseType;
 
@@ -364,13 +365,14 @@ impl Database {
         let writable_parquet_paths: Vec<TableParquet> = parquet_paths
             .par_iter()
             .filter_map(|tp| {
-                // Get the table-specific limit if it exists, otherwise use the default limit
-                let table_limit = override_limits
+                // Check for a row_limit override
+                let row_limit = override_limits
                     .as_ref()
                     .and_then(|limits| limits.get(&tp.table_name))
                     .unwrap_or(limit);
 
-                let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, table_limit) {
+                // Try (/ Catch) to write the table to a parquet file
+                let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, row_limit) {
                     Ok(_) => Some(tp.clone()),
                     Err(e) => {
                         eprintln!("{e}");
@@ -378,6 +380,7 @@ impl Database {
                     }
                 });
 
+                // Notify the user of an error
                 if result.is_err() {
                     println!("Caught a panic on {}", tp.table_name);
                     None // If a panic is caught, we don't include this item.
