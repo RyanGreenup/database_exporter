@@ -45,6 +45,27 @@ mod tests {
 ///     port: "5432".to_string(),
 /// };
 /// ```
+///
+/// # Implementation Notes
+///
+/// It might have been better to set certain attributes as `Option<>`,
+/// Given that they are left black for SQLite, e.g.:
+///
+/// ```rust
+/// pub struct SQLEngineConfig {
+///     pub database_type: DatabaseType,
+///     pub username: Option<String>,
+///     pub password: Option<String>,
+///     ...
+/// }
+/// ```
+///
+/// However, SQLite is the exception here, one would typically use python
+/// to quickly iterate over SQLite and in fact it's likely the target
+/// of this very program.
+/// We only include SQLite for development purposes and so it's not worth
+/// complicating the code when a config validation would be simpler and clearer.
+///
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SQLEngineConfig {
     pub database_type: DatabaseType,
@@ -87,7 +108,7 @@ impl SQLEngineConfig {
                 database_type: DatabaseType::Postgres,
                 username: "postgres".to_string(),
                 password: "postgres".to_string(),
-                database: String::new(),
+                database: String::from("chinook"),
                 host: "localhost".to_string(),
                 port: "5432".to_string(),
                 override_limits: None,
@@ -125,14 +146,13 @@ impl SQLEngineConfig {
         }
 
         let contents = fs::read_to_string(path).map_err(|e| e.to_string())?;
-        let config: HashMap<String, SQLEngineConfig> = toml::from_str(&contents).map_err(|e| e.to_string())?;
+        let config: HashMap<String, SQLEngineConfig> =
+            toml::from_str(&contents).map_err(|e| e.to_string())?;
         Self::validate_config(&config)?;
         Ok(config)
     }
 
-    fn validate_config(
-        config: &HashMap<String, SQLEngineConfig>,
-    ) -> Result<(), String> {
+    fn validate_config(config: &HashMap<String, SQLEngineConfig>) -> Result<(), String> {
         for (name, engine_config) in config {
             match engine_config.database_type {
                 DatabaseType::SQLite => {
