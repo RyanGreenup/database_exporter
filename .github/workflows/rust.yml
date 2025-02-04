@@ -36,7 +36,7 @@ jobs:
           cargo build --features duckdb --release
         fi
     - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.target }}-build
         path: target/${{ matrix.target }}/release/
