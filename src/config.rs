@@ -11,6 +11,25 @@ impl Default for TableLimit {
     fn default() -> Self {
         TableLimit(-1) // -1 indicates no limit by default
     }
+
+    fn validate_sql_server_config(name: &str, engine_config: &SQLEngineConfig) -> Result<(), String> {
+        if engine_config.username.is_empty() {
+            return Err(format!("Configuration '{}': SQL Server username cannot be empty", name));
+        }
+        if engine_config.password.is_empty() {
+            return Err(format!("Configuration '{}': SQL Server password cannot be empty", name));
+        }
+        if engine_config.database.is_empty() {
+            return Err(format!("Configuration '{}': SQL Server database cannot be empty", name));
+        }
+        if engine_config.host.is_empty() {
+            return Err(format!("Configuration '{}': SQL Server host cannot be empty", name));
+        }
+        if engine_config.port.is_empty() {
+            return Err(format!("Configuration '{}': SQL Server port cannot be empty", name));
+        }
+        Ok(())
+    }
 }
 
 /// Configuration for connecting to a SQL database engine.
@@ -115,7 +134,6 @@ impl SQLEngineConfig {
 
         let contents = fs::read_to_string(path).map_err(|e| e.to_string())?;
         let config = toml::from_str(&contents).map_err(|e| e.to_string())?;
-        // AI: The validation is used here
         Self::validate_config(config)?;
         Ok(config)
 
@@ -151,24 +169,8 @@ impl SQLEngineConfig {
                         return Err(format!("Configuration '{}': PostgreSQL port cannot be empty", name));
                     }
                 },
-                // Move this logic into a function to keep this more modular AI!
                 DatabaseType::SQLServer => {
-                    // SQL Server needs all fields
-                    if engine_config.username.is_empty() {
-                        return Err(format!("Configuration '{}': SQL Server username cannot be empty", name));
-                    }
-                    if engine_config.password.is_empty() {
-                        return Err(format!("Configuration '{}': SQL Server password cannot be empty", name));
-                    }
-                    if engine_config.database.is_empty() {
-                        return Err(format!("Configuration '{}': SQL Server database cannot be empty", name));
-                    }
-                    if engine_config.host.is_empty() {
-                        return Err(format!("Configuration '{}': SQL Server host cannot be empty", name));
-                    }
-                    if engine_config.port.is_empty() {
-                        return Err(format!("Configuration '{}': SQL Server port cannot be empty", name));
-                    }
+                    Self::validate_sql_server_config(name, engine_config)?;
                 }
             }
         }
