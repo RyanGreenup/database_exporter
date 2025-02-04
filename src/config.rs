@@ -38,6 +38,7 @@ pub struct SQLEngineConfig {
 
 impl SQLEngineConfig {
     pub fn load(path: &Path) -> Result<HashMap<String, SQLEngineConfig>, String> {
+        // Refactor the logic within this test into a separate method AI!
         if !path.exists() {
             let mut default_config = HashMap::new();
 
