@@ -34,6 +34,25 @@ pub struct SQLEngineConfig {
     pub database: String, // Filepath for sqlite
     pub host: String,
     pub port: String,
+    // AI!
+    // Improve this method to take an optional hasmap of table limits e.g. in json it would be
+    // something like this (we use -1 to indicate no limit):
+    //
+    // ```json
+    // "Joplin SQLite Database": {
+    //   "database_type": "sqlite",
+    //   "database": "/home/ryan/.config/joplin-desktop/database.sqlite",
+    //   "username": "",
+    //   "password": "",
+    //   "host": "",
+    //   "port": "",
+    //   "override_limits": {
+    //       "resources": 10,
+    //       "tags": -1
+    //   }
+    // }
+    // ```
+
 }
 
 impl SQLEngineConfig {
