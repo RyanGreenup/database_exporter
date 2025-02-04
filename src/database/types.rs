@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// Represents different types of SQL databases and their specific query formats
 /// Eventually this will be replaced with <connectorx::source_router::SourceType>
 /// For now not all databases have been implemented
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum DatabaseType {
     SQLServer,
