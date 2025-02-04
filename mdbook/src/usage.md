@@ -6,6 +6,9 @@ This tool requires a config file to describe the databases details and then uses
 
 ## CLI
 
+> [!NOTE]
+> Exporting a parquet with 0 rows with `--row-limit=0` will work fine if one only needs the schema
+
 The CLI provides a `--help` which should be sufficiently clear, generally the recipe is:
 
 ```sh
@@ -17,6 +20,8 @@ cargo run -- -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/ra
 ```
 
 ## Config File
+> [!NOTE]
+> The config file is TOML due to it's excellent support in Rust and human-friendly syntax
 ### Overview
 
 The config file takes a list of database connections with a key, this key will become the directory [^1738542073] for the parquets and the schema name in duckdb.
@@ -54,6 +59,22 @@ password=""
 host=""
 port=""
 ```
+
+### Custom Row Limits Override
+
+> [!WARNING]
+> There is not yet logic to change the sort order for the custom limit as it was not required for my use case (sufficiently cheap to pull the entire table
+
+If one wants to Override the limit for certain tables, this can be specified in the toml file like so:
+
+```toml
+["Joplin SQLite Database".override_limits]
+"resources" = 10  # Return first 10 rows
+"tags" = -1       # Return all Rows
+```
+
+In this example the `resources` table will only return 10 rows, however, the "
+
 
 ### Parameters
 #### Database Types

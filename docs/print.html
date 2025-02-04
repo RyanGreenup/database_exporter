@@ -665,6 +665,13 @@
 <h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
 <p>This tool requires a config file to describe the databases details and then uses cli options to describe the target format.</p>
 <h2 id="cli"><a class="header" href="#cli">CLI</a></h2>
+<div class="mdbook-callouts mdbook-callouts-note">
+<p class="mdbook-callouts-title">
+  <span class="mdbook-callouts-icon"></span>
+  note
+</p>
+<p>Exporting a parquet with 0 rows with <code>--row-limit=0</code> will work fine if one only needs the schema</p>
+</div>
 <p>The CLI provides a <code>--help</code> which should be sufficiently clear, generally the recipe is:</p>
 <pre><code class="language-sh"># From Source
 cargo run -- -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
@@ -673,6 +680,13 @@ cargo run -- -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/ra
 ./database-export -c ~/.config/database_exporter/config.toml --row-limit=6 -e data/raw/
 </code></pre>
 <h2 id="config-file"><a class="header" href="#config-file">Config File</a></h2>
+<div class="mdbook-callouts mdbook-callouts-note">
+<p class="mdbook-callouts-title">
+  <span class="mdbook-callouts-icon"></span>
+  note
+</p>
+<p>The config file is TOML due to it's excellent support in Rust and human-friendly syntax</p>
+</div>
 <h3 id="overview-1"><a class="header" href="#overview-1">Overview</a></h3>
 <p>The config file takes a list of database connections with a key, this key will become the directory <sup class="footnote-reference"><a href="#1738542073">1</a></sup> for the parquets and the schema name in duckdb.</p>
 <div class="footnote-definition" id="1738542073"><sup class="footnote-definition-label">1</sup>
@@ -708,6 +722,20 @@ password=""
 host=""
 port=""
 </code></pre>
+<h3 id="custom-row-limits-override"><a class="header" href="#custom-row-limits-override">Custom Row Limits Override</a></h3>
+<div class="mdbook-callouts mdbook-callouts-warning">
+<p class="mdbook-callouts-title">
+  <span class="mdbook-callouts-icon"></span>
+  warning
+</p>
+<p>There is not yet logic to change the sort order for the custom limit as it was not required for my use case (sufficiently cheap to pull the entire table</p>
+</div>
+<p>If one wants to Override the limit for certain tables, this can be specified in the toml file like so:</p>
+<pre><code class="language-toml">["Joplin SQLite Database".override_limits]
+"resources" = 10  # Return first 10 rows
+"tags" = -1       # Return all Rows
+</code></pre>
+<p>In this example the <code>resources</code> table will only return 10 rows, however, the "</p>
 <h3 id="parameters"><a class="header" href="#parameters">Parameters</a></h3>
 <h4 id="database-types"><a class="header" href="#database-types">Database Types</a></h4>
 <p>The available <code>database_types</code> are limited by the available <a href="https://github.com/sfu-db/connector-x?tab=readme-ov-file#sources">connector-x sources</a>, currently implemented is:</p>
