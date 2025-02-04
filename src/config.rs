@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-// Improve this so the value can only be -1 or any u32 value AI!
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TableLimit(i32);
 
@@ -115,6 +114,14 @@ impl SQLEngineConfig {
         }
 
         let contents = fs::read_to_string(path).map_err(|e| e.to_string())?;
-        toml::from_str(&contents).map_err(|e| e.to_string())
+        let config = toml::from_str(&contents).map_err(|e| e.to_string())?;
+        // AI: The validation is used here
+        Self::validate_config(config)?;
+        config
+
     }
+
+
+    // Write a method to validate the config AI!
+    fn validate_config(config: <HashMap<String, SQLEngineConfig>
 }
