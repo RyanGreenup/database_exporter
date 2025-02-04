@@ -1,11 +1,13 @@
 pub mod types;
 
 use crate::cli::DuckDBExportOptions;
+use crate::config::CustomQuery;
 use crate::config::SQLEngineConfig;
 #[cfg(feature = "duckdb")]
 use crate::file_helpers::write_parquet_files_to_duckdb_table;
 #[cfg(feature = "duckdb")]
 use crate::file_helpers::DuckDBError;
+use crate::helpers::build_output_filepath;
 use crate::helpers::TableParquet;
 use connectorx::destinations::arrow::ArrowDestinationError;
 use connectorx::prelude::*;
@@ -311,6 +313,26 @@ impl Database {
         Ok(())
     }
 
+    /// Retrieves a DataFrame for a given query
+    ///
+    /// # Arguments
+    ///
+    /// * `query` - The SQL Query to run
+    ///
+    /// # Returns
+    ///
+    /// A DataFrame containing the retrieved data.
+    pub fn get_dataframe_from_query(&self, query: &str) -> Result<DataFrame, DatabaseError> {
+        // Get the query for the table
+        let queries = &[CXQuery::from(&query)];
+
+        // Get a Destination using Arrow
+        let destination = get_arrow(self.get_connection(), None, queries)?;
+
+        // Get a Dataframe
+        destination.polars().map_err(DatabaseError::from)
+    }
+
     /*
     // File Operations ........................................................
      */
@@ -338,6 +360,27 @@ impl Database {
         Ok(())
     }
 
+    // get_dataframe_from_query
+    /// Writes a SQL Query to a Parquet file.
+    ///
+    /// # Arguments
+    ///
+    /// * `` - A reference to a `TableParquet` struct containing the table name and file path.
+    /// * `limit` - An optional limit on the number of rows to retrieve from the table.
+    pub fn write_query_result_to_parquet(
+        &self,
+        parquet_path: &Path,
+        query: &str,
+    ) -> Result<(), DatabaseError> {
+        // Get the dataframe for the table
+        let mut df = self.get_dataframe_from_query(query)?;
+
+        // Write the dataframe to parquet
+        write_dataframe_to_parquet(&mut df, parquet_path)?;
+
+        Ok(())
+    }
+
     /// Exports DataFrames for all tables to Parquet files and loads them into DuckDB.
     ///
     /// # Arguments
@@ -353,6 +396,7 @@ impl Database {
         duckdb_options: Option<&DuckDBExportOptions>,
         #[allow(unused_variables)] schema: &str,
         override_limits: Option<HashMap<String, Option<u32>>>,
+        custom_queries: Option<Vec<CustomQuery>>,
     ) -> Result<(), DatabaseError> {
         // Get paths to parquet files
         let parquet_paths: Vec<TableParquet> = self
@@ -361,25 +405,25 @@ impl Database {
             .map(|table_name| TableParquet::new(&table_name, export_directory, schema))
             .collect();
 
-
-        let writable_parquet_paths: Vec<TableParquet> = parquet_paths
+        let mut writable_parquet_paths: Vec<TableParquet> = parquet_paths
             .par_iter()
             .filter_map(|tp| {
                 // Check for a row_limit override
                 let row_limit = override_limits
                     .as_ref()
                     .and_then(|limits| limits.get(&tp.table_name))
-                    .copied()  // Convert &Option<u32> to Option<u32>
+                    .copied() // Convert &Option<u32> to Option<u32>
                     .unwrap_or_else(|| limit);
 
                 // Try (/ Catch) to write the table to a parquet file
-                let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, row_limit) {
-                    Ok(_) => Some(tp.clone()),
-                    Err(e) => {
-                        eprintln!("{e}");
-                        None
-                    }
-                });
+                let result =
+                    std::panic::catch_unwind(|| match self.write_to_parquet(tp, row_limit) {
+                        Ok(_) => Some(tp.clone()),
+                        Err(e) => {
+                            eprintln!("{e}");
+                            None
+                        }
+                    });
 
                 // Notify the user of an error
                 if result.is_err() {
@@ -390,6 +434,24 @@ impl Database {
                 }
             })
             .collect();
+
+        // Create custom queries
+        if let Some(queries) = custom_queries {
+            for query in queries {
+                let path = build_output_filepath(&query.name, export_directory, schema);
+                match self.write_query_result_to_parquet(&path, &query.query) {
+                    Err(e) => {
+                        eprintln!("Unable to execute custom query:\n{}\n{}", query.query, e);
+                    }
+                    Ok(()) => {
+                        writable_parquet_paths.extend([TableParquet {
+                            file_path: path,
+                            table_name: query.name.clone(),
+                        }]);
+                    }
+                }
+            }
+        }
 
         #[allow(unused_variables)]
         if let Some(opts) = duckdb_options {

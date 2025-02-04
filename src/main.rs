@@ -112,7 +112,14 @@ fn run(
         // Get custom row_limit overrides from the toml
         let override_limits = config.get_override_limits();
 
-        match db.export_dataframes(row_limit, export_directory, duckdb_options, &name, override_limits) {
+        match db.export_dataframes(
+            row_limit,
+            export_directory,
+            duckdb_options,
+            &name,
+            override_limits,
+            config.custom_queries,
+        ) {
             Ok(_) => {}
             Err(e) => eprintln!("{e}"),
         }

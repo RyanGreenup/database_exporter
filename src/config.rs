@@ -24,6 +24,25 @@ mod tests {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CustomQuery {
+    /// Basically a Table Name
+    pub name: String,
+    /// Description of the query
+    pub description: String,
+    /// The SQL Query
+    pub query: String,
+}
+impl CustomQuery {
+    pub fn new(name: &str, description: &str, query: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            description: description.to_string(),
+            query: query.to_string(),
+        }
+    }
+}
+
 /// Configuration for connecting to a SQL database engine.
 ///
 /// This struct holds all necessary connection parameters for various SQL database types
@@ -77,6 +96,7 @@ pub struct SQLEngineConfig {
     pub port: String,
     #[serde(default)]
     override_limits: Option<HashMap<String, TableLimit>>,
+    pub custom_queries: Option<Vec<CustomQuery>>,
 }
 
 impl SQLEngineConfig {
@@ -85,11 +105,7 @@ impl SQLEngineConfig {
             limits
                 .iter()
                 .map(|(k, v)| {
-                    let limit = if v.0 == -1 {
-                        None
-                    } else {
-                        Some(v.0 as u32)
-                    };
+                    let limit = if v.0 == -1 { None } else { Some(v.0 as u32) };
                     (k.clone(), limit)
                 })
                 .collect()
@@ -116,6 +132,10 @@ impl SQLEngineConfig {
                 host: String::new(),
                 port: String::new(),
                 override_limits: Some(sqlite_limits),
+                custom_queries: Some(vec![
+                    CustomQuery::new("00_test", "A Test Query", "SELECT id FROM notes"),
+                    CustomQuery::new("01_test", "A Test Query", "SELECT body FROM notes"),
+                ]),
             },
         );
 
@@ -130,6 +150,7 @@ impl SQLEngineConfig {
                 host: "localhost".to_string(),
                 port: "5432".to_string(),
                 override_limits: None,
+                custom_queries: None,
             },
         );
 
@@ -144,6 +165,7 @@ impl SQLEngineConfig {
                 host: "localhost".to_string(),
                 port: "1433".to_string(),
                 override_limits: None,
+                custom_queries: None,
             },
         );
         println!("{:#?}", default_config);
@@ -172,6 +194,7 @@ impl SQLEngineConfig {
 
     fn validate_config(config: &HashMap<String, SQLEngineConfig>) -> Result<(), String> {
         for (name, engine_config) in config {
+            Self::validate_custom_queries(name, engine_config)?;
             match engine_config.database_type {
                 DatabaseType::SQLite => {
                     // SQLite only needs database path
@@ -198,6 +221,25 @@ impl SQLEngineConfig {
                 }
                 DatabaseType::MySQL => {
                     Self::validate_remote_sql_server_config(name, engine_config)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_custom_queries(name: &str, engine_config: &SQLEngineConfig) -> Result<(), String> {
+        if let Some(custom_queries) = &engine_config.custom_queries {
+            for query in custom_queries {
+                if !query
+                    .name
+                    .chars()
+                    .next()
+                    .map_or(false, |c| c.is_ascii_alphabetic())
+                {
+                    return Err(format!(
+                     "Configuration '{}': Custom query name '{}' must start with an ASCII letter",
+                     name, query.name
+                 ));
                 }
             }
         }
