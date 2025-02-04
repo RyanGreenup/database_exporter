@@ -13,6 +13,17 @@ impl Default for TableLimit {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_config_is_valid() {
+        let default_config = SQLEngineConfig::create_default_config();
+        assert!(SQLEngineConfig::validate_config(&default_config).is_ok());
+    }
+}
+
 /// Configuration for connecting to a SQL database engine.
 ///
 /// This struct holds all necessary connection parameters for various SQL database types
