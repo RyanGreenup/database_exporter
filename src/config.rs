@@ -117,7 +117,7 @@ impl SQLEngineConfig {
         let config = toml::from_str(&contents).map_err(|e| e.to_string())?;
         // AI: The validation is used here
         Self::validate_config(config)?;
-        config
+        Ok(config)
 
     }
 
@@ -131,7 +131,7 @@ impl SQLEngineConfig {
                         return Err(format!("Configuration '{}': SQLite database path cannot be empty", name));
                     }
                     // SQLite shouldn't have username/password/host/port
-                    if !engine_config.username.is_empty() || !engine_config.password.is_empty() 
+                    if !engine_config.username.is_empty() || !engine_config.password.is_empty()
                        || !engine_config.host.is_empty() || !engine_config.port.is_empty() {
                         return Err(format!("Configuration '{}': SQLite should not have username, password, host, or port configured", name));
                     }
@@ -151,6 +151,7 @@ impl SQLEngineConfig {
                         return Err(format!("Configuration '{}': PostgreSQL port cannot be empty", name));
                     }
                 },
+                // Move this logic into a function to keep this more modular AI!
                 DatabaseType::SQLServer => {
                     // SQL Server needs all fields
                     if engine_config.username.is_empty() {
