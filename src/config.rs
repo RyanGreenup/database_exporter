@@ -114,8 +114,8 @@ impl SQLEngineConfig {
         }
 
         let contents = fs::read_to_string(path).map_err(|e| e.to_string())?;
-        let config = toml::from_str(&contents).map_err(|e| e.to_string())?;
-        Self::validate_config(config)?;
+        let config: HashMap<String, SQLEngineConfig> = toml::from_str(&contents).map_err(|e| e.to_string())?;
+        Self::validate_config(&config)?;
         Ok(config)
     }
 
