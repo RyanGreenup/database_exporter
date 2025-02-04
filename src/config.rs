@@ -11,25 +11,6 @@ impl Default for TableLimit {
     fn default() -> Self {
         TableLimit(-1) // -1 indicates no limit by default
     }
-
-    fn validate_sql_server_config(name: &str, engine_config: &SQLEngineConfig) -> Result<(), String> {
-        if engine_config.username.is_empty() {
-            return Err(format!("Configuration '{}': SQL Server username cannot be empty", name));
-        }
-        if engine_config.password.is_empty() {
-            return Err(format!("Configuration '{}': SQL Server password cannot be empty", name));
-        }
-        if engine_config.database.is_empty() {
-            return Err(format!("Configuration '{}': SQL Server database cannot be empty", name));
-        }
-        if engine_config.host.is_empty() {
-            return Err(format!("Configuration '{}': SQL Server host cannot be empty", name));
-        }
-        if engine_config.port.is_empty() {
-            return Err(format!("Configuration '{}': SQL Server port cannot be empty", name));
-        }
-        Ok(())
-    }
 }
 
 /// Configuration for connecting to a SQL database engine.
@@ -136,44 +117,72 @@ impl SQLEngineConfig {
         let config = toml::from_str(&contents).map_err(|e| e.to_string())?;
         Self::validate_config(config)?;
         Ok(config)
-
     }
 
-
-    fn validate_config(config: HashMap<String, SQLEngineConfig>) -> Result<HashMap<String, SQLEngineConfig>, String> {
-        for (name, engine_config) in &config {
+    fn validate_config(
+        config: &HashMap<String, SQLEngineConfig>,
+    ) -> Result<(), String> {
+        for (name, engine_config) in config {
             match engine_config.database_type {
                 DatabaseType::SQLite => {
                     // SQLite only needs database path
                     if engine_config.database.is_empty() {
-                        return Err(format!("Configuration '{}': SQLite database path cannot be empty", name));
+                        return Err(format!(
+                            "Configuration '{}': SQLite database path cannot be empty",
+                            name
+                        ));
                     }
                     // SQLite shouldn't have username/password/host/port
-                    if !engine_config.username.is_empty() || !engine_config.password.is_empty()
-                       || !engine_config.host.is_empty() || !engine_config.port.is_empty() {
+                    if !engine_config.username.is_empty()
+                        || !engine_config.password.is_empty()
+                        || !engine_config.host.is_empty()
+                        || !engine_config.port.is_empty()
+                    {
                         return Err(format!("Configuration '{}': SQLite should not have username, password, host, or port configured", name));
                     }
-                },
+                }
                 DatabaseType::Postgres => {
-                    // Postgres needs all fields except database (which is optional)
-                    if engine_config.username.is_empty() {
-                        return Err(format!("Configuration '{}': PostgreSQL username cannot be empty", name));
-                    }
-                    if engine_config.password.is_empty() {
-                        return Err(format!("Configuration '{}': PostgreSQL password cannot be empty", name));
-                    }
-                    if engine_config.host.is_empty() {
-                        return Err(format!("Configuration '{}': PostgreSQL host cannot be empty", name));
-                    }
-                    if engine_config.port.is_empty() {
-                        return Err(format!("Configuration '{}': PostgreSQL port cannot be empty", name));
-                    }
-                },
+                    Self::validate_remote_sql_server_config(name, engine_config)?;
+                }
                 DatabaseType::SQLServer => {
-                    Self::validate_sql_server_config(name, engine_config)?;
+                    Self::validate_remote_sql_server_config(name, engine_config)?;
+                }
+                DatabaseType::MySQL => {
+                    Self::validate_remote_sql_server_config(name, engine_config)?;
                 }
             }
         }
-        Ok(config)
+        Ok(())
+    }
+
+    fn validate_remote_sql_server_config(
+        name: &str,
+        engine_config: &SQLEngineConfig,
+    ) -> Result<(), String> {
+        if engine_config.username.is_empty() {
+            return Err(format!(
+                "Configuration '{}': username cannot be empty",
+                name
+            ));
+        }
+        if engine_config.password.is_empty() {
+            return Err(format!(
+                "Configuration '{}': password cannot be empty",
+                name
+            ));
+        }
+        if engine_config.database.is_empty() {
+            return Err(format!(
+                "Configuration '{}': database cannot be empty",
+                name
+            ));
+        }
+        if engine_config.host.is_empty() {
+            return Err(format!("Configuration '{}': host cannot be empty", name));
+        }
+        if engine_config.port.is_empty() {
+            return Err(format!("Configuration '{}': port cannot be empty", name));
+        }
+        Ok(())
     }
 }
