@@ -106,8 +106,9 @@ fn run(
         println!("Processing database: {}", name);
 
         let db = Database::new(config.clone(), config.database_type);
+        let override_limits = config.get_override_limits();
 
-        match db.export_dataframes(row_limit, export_directory, duckdb_options, &name) {
+        match db.export_dataframes(row_limit, export_directory, duckdb_options, &name, override_limits) {
             Ok(_) => {}
             Err(e) => eprintln!("{e}"),
         }
