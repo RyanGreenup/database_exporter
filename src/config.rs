@@ -122,6 +122,55 @@ impl SQLEngineConfig {
     }
 
 
-    // Write a method to validate the config AI!
-    fn validate_config(config: <HashMap<String, SQLEngineConfig>
+    fn validate_config(config: HashMap<String, SQLEngineConfig>) -> Result<HashMap<String, SQLEngineConfig>, String> {
+        for (name, engine_config) in &config {
+            match engine_config.database_type {
+                DatabaseType::SQLite => {
+                    // SQLite only needs database path
+                    if engine_config.database.is_empty() {
+                        return Err(format!("Configuration '{}': SQLite database path cannot be empty", name));
+                    }
+                    // SQLite shouldn't have username/password/host/port
+                    if !engine_config.username.is_empty() || !engine_config.password.is_empty() 
+                       || !engine_config.host.is_empty() || !engine_config.port.is_empty() {
+                        return Err(format!("Configuration '{}': SQLite should not have username, password, host, or port configured", name));
+                    }
+                },
+                DatabaseType::Postgres => {
+                    // Postgres needs all fields except database (which is optional)
+                    if engine_config.username.is_empty() {
+                        return Err(format!("Configuration '{}': PostgreSQL username cannot be empty", name));
+                    }
+                    if engine_config.password.is_empty() {
+                        return Err(format!("Configuration '{}': PostgreSQL password cannot be empty", name));
+                    }
+                    if engine_config.host.is_empty() {
+                        return Err(format!("Configuration '{}': PostgreSQL host cannot be empty", name));
+                    }
+                    if engine_config.port.is_empty() {
+                        return Err(format!("Configuration '{}': PostgreSQL port cannot be empty", name));
+                    }
+                },
+                DatabaseType::SQLServer => {
+                    // SQL Server needs all fields
+                    if engine_config.username.is_empty() {
+                        return Err(format!("Configuration '{}': SQL Server username cannot be empty", name));
+                    }
+                    if engine_config.password.is_empty() {
+                        return Err(format!("Configuration '{}': SQL Server password cannot be empty", name));
+                    }
+                    if engine_config.database.is_empty() {
+                        return Err(format!("Configuration '{}': SQL Server database cannot be empty", name));
+                    }
+                    if engine_config.host.is_empty() {
+                        return Err(format!("Configuration '{}': SQL Server host cannot be empty", name));
+                    }
+                    if engine_config.port.is_empty() {
+                        return Err(format!("Configuration '{}': SQL Server port cannot be empty", name));
+                    }
+                }
+            }
+        }
+        Ok(config)
+    }
 }
