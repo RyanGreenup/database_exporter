@@ -10,6 +10,8 @@ use crate::helpers::TableParquet;
 use connectorx::destinations::arrow::ArrowDestinationError;
 use connectorx::prelude::*;
 use polars::error::PolarsError;
+use polars::export::rayon::iter::IntoParallelRefIterator;
+use polars::export::rayon::iter::ParallelIterator;
 use polars::frame::DataFrame;
 use polars::prelude::ParquetWriter;
 use std::path::Path;
@@ -357,8 +359,9 @@ impl Database {
             .map(|table_name| TableParquet::new(&table_name, export_directory, schema))
             .collect();
 
-        let mut writable_parquet_paths: Vec<TableParquet> = Vec::with_capacity(parquet_paths.len());
+        // let mut writable_parquet_paths: Vec<TableParquet> = Vec::with_capacity(parquet_paths.len());
 
+        /*
         // Write to files
         for tp in &parquet_paths {
             let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, limit) {
@@ -373,6 +376,27 @@ impl Database {
                 writable_parquet_paths.push(tp.clone())
             }
         }
+        */
+
+        let writable_parquet_paths: Vec<TableParquet> = parquet_paths
+            .par_iter()
+            .filter_map(|tp| {
+                let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, limit) {
+                    Ok(_) => Some(tp.clone()),
+                    Err(e) => {
+                        eprintln!("{e}");
+                        None
+                    }
+                });
+
+                if result.is_err() {
+                    println!("Caught a panic on {}", tp.table_name);
+                    None // If a panic is caught, we don't include this item.
+                } else {
+                    result.unwrap()
+                }
+            })
+            .collect();
 
         #[allow(unused_variables)]
         if let Some(opts) = duckdb_options {
