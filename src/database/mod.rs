@@ -351,6 +351,7 @@ impl Database {
         export_directory: &Path,
         duckdb_options: Option<&DuckDBExportOptions>,
         #[allow(unused_variables)] schema: &str,
+        override_limits: Option<HashMap<String, Option<u32>>>,
     ) -> Result<(), DatabaseError> {
         // Get paths to parquet files
         let parquet_paths: Vec<TableParquet> = self
@@ -359,28 +360,12 @@ impl Database {
             .map(|table_name| TableParquet::new(&table_name, export_directory, schema))
             .collect();
 
-        // let mut writable_parquet_paths: Vec<TableParquet> = Vec::with_capacity(parquet_paths.len());
-
-        /*
-        // Write to files
-        for tp in &parquet_paths {
-            let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, limit) {
-                Ok(_) => (),
-                Err(e) => eprintln!("{e}"),
-            });
-
-            if result.is_err() {
-                println!("Caught a panic on {}", tp.table_name);
-                continue; // Ignore and continue the loop
-            } else {
-                writable_parquet_paths.push(tp.clone())
-            }
-        }
-        */
 
         let writable_parquet_paths: Vec<TableParquet> = parquet_paths
             .par_iter()
             .filter_map(|tp| {
+                // If the override_limits is some and the tp.table_name is a valid key
+                // Modify the value of limit AI!
                 let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, limit) {
                     Ok(_) => Some(tp.clone()),
                     Err(e) => {
