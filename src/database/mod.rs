@@ -361,9 +361,16 @@ impl Database {
 
         // Write to files
         for tp in &parquet_paths {
-            match self.write_to_parquet(tp, limit) {
-                Ok(_) => writable_parquet_paths.push(tp.clone()),
+            let result = std::panic::catch_unwind(|| match self.write_to_parquet(tp, limit) {
+                Ok(_) => (),
                 Err(e) => eprintln!("{e}"),
+            });
+
+            if result.is_err() {
+                println!("Caught a panic on {}", tp.table_name);
+                continue; // Ignore and continue the loop
+            } else {
+                writable_parquet_paths.push(tp.clone())
             }
         }
 
