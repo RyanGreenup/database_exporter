@@ -4,6 +4,15 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TableLimit(i32);
+
+impl Default for TableLimit {
+    fn default() -> Self {
+        TableLimit(-1) // -1 indicates no limit by default
+    }
+}
+
 /// Configuration for connecting to a SQL database engine.
 ///
 /// This struct holds all necessary connection parameters for various SQL database types
@@ -34,30 +43,31 @@ pub struct SQLEngineConfig {
     pub database: String, // Filepath for sqlite
     pub host: String,
     pub port: String,
-    // AI!
-    // Improve this method to take an optional hasmap of table limits e.g. in json it would be
-    // something like this (we use -1 to indicate no limit):
-    //
-    // ```json
-    // "Joplin SQLite Database": {
-    //   "database_type": "sqlite",
-    //   "database": "/home/ryan/.config/joplin-desktop/database.sqlite",
-    //   "username": "",
-    //   "password": "",
-    //   "host": "",
-    //   "port": "",
-    //   "override_limits": {
-    //       "resources": 10,
-    //       "tags": -1
-    //   }
-    // }
-    // ```
-
+    #[serde(default)]
+    pub override_limits: HashMap<String, TableLimit>,
 }
 
 impl SQLEngineConfig {
     fn create_default_config() -> HashMap<String, SQLEngineConfig> {
         let mut default_config = HashMap::new();
+
+        // Create an example for sqlite with table limits
+        let mut sqlite_limits = HashMap::new();
+        sqlite_limits.insert("resources".to_string(), TableLimit(10));
+        sqlite_limits.insert("tags".to_string(), TableLimit(-1));
+
+        default_config.insert(
+            "Local SQLite Database".to_string(),
+            SQLEngineConfig {
+                database_type: DatabaseType::SQLite,
+                username: String::new(),
+                password: String::new(),
+                database: "/database.sqlite".to_string(),
+                host: String::new(),
+                port: String::new(),
+                override_limits: sqlite_limits,
+            },
+        );
 
         // Create an example for postgres
         default_config.insert(
@@ -69,19 +79,7 @@ impl SQLEngineConfig {
                 database: String::new(),
                 host: "localhost".to_string(),
                 port: "5432".to_string(),
-            },
-        );
-
-        // Create an example for sqlite
-        default_config.insert(
-            "Local SQLite Database".to_string(),
-            SQLEngineConfig {
-                database_type: DatabaseType::SQLite,
-                username: String::new(),
-                password: String::new(),
-                database: "/database.sqlite".to_string(),
-                host: String::new(),
-                port: String::new(),
+                override_limits: HashMap::new(),
             },
         );
 
@@ -95,6 +93,7 @@ impl SQLEngineConfig {
                 database: "chinook".to_string(),
                 host: "localhost".to_string(),
                 port: "1433".to_string(),
+                override_limits: HashMap::new(),
             },
         );
 
